@@ -12,7 +12,10 @@ const CreateTrivia: React.FC = () => {
   };
 
   const removeQuestion = (id: number) => {
-    setQuestions(questions.filter((question) => question !== id));
+    const updatedQuestions = questions
+      .filter((question) => question !== id)
+      .map((question, index) => index);
+    setQuestions(updatedQuestions);
   };
 
   const handleDiscard = () => {
