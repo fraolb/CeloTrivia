@@ -47,6 +47,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ id, onRemove }) => {
       >
         <FaCog />
       </button>
+
       {showSettings && (
         <div className="absolute top-8 right-2 bg-white border rounded-lg shadow-md">
           <button
@@ -57,6 +58,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ id, onRemove }) => {
           </button>
         </div>
       )}
+      <div className="flex justify-start">Q{id}</div>
       <div className="flex flex-col items-center pt-4">
         <input
           type="text"
