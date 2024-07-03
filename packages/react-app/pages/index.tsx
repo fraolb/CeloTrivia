@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
+  const [room, setRoom] = useState<string>("");
   const { address, isConnected } = useAccount();
+  const router = useRouter();
 
   if (typeof window !== "undefined") {
     // @ts-ignore
@@ -13,6 +16,12 @@ export default function Home() {
       T: () => {},
     };
   }
+
+  const handleJoin = () => {
+    if (room !== "") {
+      router.push(`/join/${room}`);
+    }
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -40,9 +49,15 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="Enter Quiz Code"
+                onChange={(event) => {
+                  setRoom(event.target.value);
+                }}
                 className="w-full p-3 mb-6 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button className="w-full p-3 mb-4 text-lg font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <button
+                onClick={() => handleJoin()}
+                className="w-full p-3 mb-4 text-lg font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 Join Trivia
               </button>
             </div>

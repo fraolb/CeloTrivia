@@ -28,15 +28,15 @@ const Dashboard: React.FC = () => {
 
   const handleHost = (triviaId: number) => {
     //const roomId = Math.random().toString(36).substring(2, 10); // Generate a random room ID
-    const roomId = triviaId;
-    socket.emit("create_room", roomId, (response: any) => {
-      console.log("the response is ", response);
-      if (response.success) {
-        router.push(`/host/${roomId}`);
-      } else {
-        console.error(response.error);
-      }
-    });
+    const room = triviaId;
+    // socket.emit("create_room", room, (response: any) => {
+    //   console.log("the response is ", response);
+    //   if (response.success) {
+    router.push(`/host/${room}`);
+    //   } else {
+    //     console.error(response.error);
+    //   }
+    // });
   };
 
   return (
