@@ -15,7 +15,6 @@ const io = new Server(server, {
   },
 });
 
-// Example in-memory storage for room creators
 const rooms = {};
 
 io.on("connection", (socket) => {
@@ -51,8 +50,21 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send_message", (data) => {
-    console.log(`User ${socket.id} sent ${data.message}`);
     socket.to(data.room).emit("receive_message", data);
+  });
+
+  socket.on("start_quiz", (room) => {
+    socket.to(room).emit("quiz_started");
+  });
+
+  socket.on("send_question", (data) => {
+    const { room, question } = data;
+    socket.to(room).emit("receive_question", question);
+  });
+
+  socket.on("show_answer", (data) => {
+    const { room, answer } = data;
+    socket.to(room).emit("receive_answer", answer);
   });
 });
 
