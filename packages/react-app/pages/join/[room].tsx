@@ -17,9 +17,17 @@ function Room() {
   const [messageReceived, setMessageReceived] = useState<string[]>([]);
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
+  const [yourAnswer, setYourAnswer] = useState("");
+  const [clickable, setClickable] = useState(false);
 
   const sendMessage = () => {
     socket.emit("send_message", { message, room });
+  };
+
+  const submitAnswer = (choice: string) => {
+    setYourAnswer(choice);
+    //socket.emit("submit_answer", { room, answer: choice });
+    setClickable(false);
   };
 
   useEffect(() => {
@@ -30,6 +38,8 @@ function Room() {
     socket.on("receive_question", (question) => {
       setQuestion(question);
       setAnswer(""); // Clear previous answer
+      setYourAnswer("");
+      setClickable(true);
     });
 
     socket.on("receive_answer", (answer) => {
@@ -64,17 +74,38 @@ function Room() {
       {messageReceived.map((msg, index) => (
         <div key={index}>{msg}</div>
       ))}
-      {question && (
+      {answer == "" && question && (
         <div>
-          <h2>{question.text}</h2>
+          <h2 className="w-full p-2 mb-4 border border-gray-300 rounded-md text-center text-2xl">
+            {question.text}
+          </h2>
           <ul>
-            {question.choices.map((choice, index) => (
-              <li key={index}>{choice}</li>
-            ))}
+            <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-4">
+              {question.choices.map((choice, index) => (
+                <button
+                  disabled={!clickable}
+                  onClick={() => submitAnswer(choice)}
+                  className="w-full p-2 border border-gray-300 rounded-md text-2xl hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:text-white"
+                >
+                  {choice}
+                </button>
+              ))}
+            </div>
           </ul>
           {answer && <h3>Answer: {answer}</h3>}
         </div>
       )}
+      <div>
+        {answer !== "" && yourAnswer !== answer ? (
+          <div className="w-full p-2 mb-4 text-center text-red-500 text-2xl">
+            Ooops, wrong answer.
+          </div>
+        ) : (
+          <div className="w-full p-2 mb-4 text-center text-green-500 text-2xl">
+            You are correct!
+          </div>
+        )}
+      </div>
     </div>
   );
 }
