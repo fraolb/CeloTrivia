@@ -29,7 +29,7 @@ const connectors = connectorsForWallets(
     },
   ],
   {
-    appName: "CeloTunes",
+    appName: "CeloTrivia",
     projectId,
   }
 );
@@ -56,7 +56,7 @@ function App({ Component, pageProps }: AppProps) {
               <Head>
                 <link rel="icon" href="/CTIcon.png" />
 
-                <title>CeloTunes</title>
+                <title>CeloTrivia</title>
               </Head>
               <Component {...pageProps} />
               {/* </Layout> */}
