@@ -39,6 +39,14 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("check_room", (room) => {
+    if (room[room]) {
+      socket.emit("room_exists", room);
+    } else {
+      socket.emit("error", "Room does not exist.");
+    }
+  });
+
   socket.on("join_room", (room) => {
     if (rooms[room]) {
       socket.join(room);
@@ -65,6 +73,12 @@ io.on("connection", (socket) => {
   socket.on("show_answer", (data) => {
     const { room, answer } = data;
     socket.to(room).emit("receive_answer", answer);
+  });
+
+  socket.on("answer_question", (data) => {
+    const { room, answer } = data;
+    const userAnswer = { answer: answer, id: socket.id };
+    socket.to(room).emit("receive_users_answer", userAnswer);
   });
 });
 
