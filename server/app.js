@@ -80,6 +80,11 @@ io.on("connection", (socket) => {
     const userAnswer = { answer: answer, id: socket.id };
     socket.to(room).emit("receive_users_answer", userAnswer);
   });
+
+  socket.on("close_quiz", (data) => {
+    const { room, winners } = data;
+    socket.to(room).emit("quiz_finished", winners);
+  });
 });
 
 server.listen(3001, () => {
