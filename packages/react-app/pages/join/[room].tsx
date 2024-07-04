@@ -107,7 +107,7 @@ function Room() {
       {messageReceived.map((msg, index) => (
         <div key={index}>{msg}</div>
       ))}
-      {answer === "" && question && (
+      {question && (
         <div>
           <h2 className="w-full p-2 mb-4 border border-gray-300 rounded-md text-center text-2xl">
             {question.text}
@@ -132,13 +132,15 @@ function Room() {
         {countdown > 0 && <p>Time remaining: {countdown}</p>}
       </div>
       <div>
-        {answer !== "" && yourAnswer !== answer ? (
-          <div className="w-full p-2 mb-4 text-center text-red-500 text-2xl">
-            Ooops, wrong answer.
-          </div>
-        ) : (
-          <div className="w-full p-2 mb-4 text-center text-green-500 text-2xl">
-            You are correct!
+        {answer !== "" && yourAnswer && (
+          <div
+            className={`w-full p-2 mb-4 text-center text-2xl ${
+              yourAnswer === answer ? "text-green-500" : "text-red-500"
+            }`}
+          >
+            {yourAnswer === answer
+              ? "You are correct!"
+              : "Ooops, wrong answer."}
           </div>
         )}
       </div>

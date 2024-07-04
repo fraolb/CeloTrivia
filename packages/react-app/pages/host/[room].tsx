@@ -25,14 +25,25 @@ const HostPage = () => {
   const [message, setMessage] = useState<string>("");
   const [messageReceived, setMessageReceived] = useState<string>("");
   const [quizStarted, setQuizStarted] = useState<boolean>(false);
-  const [question, setQuestion] = useState<Question>({
-    text: "What is the capital of France?",
-    choices: ["Paris", "Berlin", "Madrid", "Rome"],
-    answer: "Paris",
-  });
+  const [questionIndex, setQuestionIndex] = useState<number>(0);
+  const [questions, setQuestions] = useState<Question[]>([
+    {
+      text: "What is the capital of France?",
+      choices: ["Paris", "Berlin", "Madrid", "Rome"],
+      answer: "Paris",
+    },
+    {
+      text: "What is 2 + 2?",
+      choices: ["3", "4", "5", "6"],
+      answer: "4",
+    },
+    // Add more questions as needed
+  ]);
   const [showAnswer, setShowAnswer] = useState<boolean>(false);
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
-  const [correctUsers, setCorrectUsers] = useState<string[]>([]);
+  const [totalUserAnswers, setTotalUserAnswers] = useState<{
+    [key: string]: number;
+  }>({});
   const [countdown, setCountdown] = useState<number>(0);
 
   const sendMessage = () => {
@@ -50,16 +61,16 @@ const HostPage = () => {
       if (startCountdown <= 0) {
         clearInterval(countdownInterval);
         setQuizStarted(true);
-        startQuestionTimer();
+        startQuestionTimer(0);
       }
     }, 1000);
   };
 
-  const startQuestionTimer = () => {
+  const startQuestionTimer = (qIndex: number) => {
     let questionCountdown = 10;
     setCountdown(questionCountdown);
-
-    socket.emit("send_question", { room, question });
+    console.log("the question index is ", questionIndex);
+    socket.emit("send_question", { room, question: questions[qIndex] });
 
     const questionInterval = setInterval(() => {
       questionCountdown -= 1;
@@ -67,17 +78,20 @@ const HostPage = () => {
       if (questionCountdown <= 0) {
         clearInterval(questionInterval);
         setShowAnswer(true);
-        socket.emit("show_answer", { room, answer: question.answer });
-        checkAnswers();
+        socket.emit("show_answer", {
+          room,
+          answer: questions[qIndex].answer,
+        });
       }
     }, 1000);
   };
 
-  const checkAnswers = () => {
-    const correctUsers = userAnswers
-      .filter((userAnswer) => userAnswer.answer === question.answer)
-      .map((userAnswer) => userAnswer.id);
-    setCorrectUsers(correctUsers);
+  const nextQuestion = () => {
+    setShowAnswer(false);
+    setUserAnswers([]);
+    setQuestionIndex(questionIndex + 1);
+    const qIndex = questionIndex + 1;
+    startQuestionTimer(qIndex);
   };
 
   useEffect(() => {
@@ -93,9 +107,22 @@ const HostPage = () => {
         setMessageReceived(data.message);
       });
       socket.on("receive_users_answer", (data: UserAnswer) => {
-        const point = data.answer === question.answer ? 1 : 0;
+        const point = data.answer === questions[questionIndex].answer ? 1 : 0;
         const usrData = { ...data, point };
         setUserAnswers((prevUserAnswers) => [...prevUserAnswers, usrData]);
+
+        // Update totalUserAnswers
+        if (point > 0) {
+          setTotalUserAnswers((prevTotalUserAnswers) => {
+            const updatedTotalUserAnswers = { ...prevTotalUserAnswers };
+            if (updatedTotalUserAnswers[usrData.id]) {
+              updatedTotalUserAnswers[usrData.id] += 1;
+            } else {
+              updatedTotalUserAnswers[usrData.id] = 1;
+            }
+            return updatedTotalUserAnswers;
+          });
+        }
       });
     }
 
@@ -103,7 +130,7 @@ const HostPage = () => {
       socket.off("receive_message");
       socket.off("receive_users_answer");
     };
-  }, [room]);
+  }, [room, questionIndex]);
 
   return (
     <div className="flex flex-col items-center min-h-screen py-2 bg-gray-100">
@@ -140,16 +167,18 @@ const HostPage = () => {
           )}
           {quizStarted && (
             <div>
-              <h2 className="text-2xl mt-4">{question.text}</h2>
+              <h2 className="text-2xl mt-4">{questions[questionIndex].text}</h2>
               <ul>
-                {question.choices.map((choice, index) => (
+                {questions[questionIndex].choices.map((choice, index) => (
                   <li key={index}>{choice}</li>
                 ))}
               </ul>
               <h2 className="text-2xl mt-4">Time remaining: {countdown}</h2>
               {showAnswer && (
                 <div className="mt-4">
-                  <h3 className="text-xl">Answer: {question.answer}</h3>
+                  <h3 className="text-xl">
+                    Answer: {questions[questionIndex].answer}
+                  </h3>
                   <h3 className="text-xl mt-4">
                     Users who answered correctly:
                   </h3>
@@ -164,12 +193,30 @@ const HostPage = () => {
                       <li>No one answered.</li>
                     )}
                   </ul>
+                  {questions.length > questionIndex + 1 && (
+                    <button
+                      onClick={nextQuestion}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-4"
+                    >
+                      Next Question
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           )}
         </div>
       )}
+      <div className="mt-4">
+        <h3 className="text-2xl">Total User Points:</h3>
+        <ul>
+          {Object.entries(totalUserAnswers).map(([userId, points], index) => (
+            <li key={index}>
+              {userId}: {points} points
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
