@@ -18,9 +18,9 @@ const Dashboard: React.FC = () => {
   ]);
 
   const router = useRouter();
-  const socket = io("http://localhost:3001", {
-    auth: { isCreator: true }, // Send authentication info
-  });
+  // const socket = io("http://localhost:3001", {
+  //   auth: { isCreator: true }, // Send authentication info
+  // });
 
   const handleDelete = (id: number) => {
     setTrivias(trivias.filter((trivia) => trivia.id !== id));
@@ -40,14 +40,17 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen py-2 bg-gray-100">
+    <div
+      className="flex flex-col items-center min-h-screen py-2 bg-cover bg-center"
+      style={{ backgroundImage: "url('/4.png')" }}
+    >
       <Head>
         <title>Dashboard</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex flex-col items-center w-full flex-1 px-4 sm:px-20 text-center">
-        <h1 className="text-4xl font-bold mt-6 mb-12">Dashboard</h1>
+      <main className="flex flex-col items-center w-full flex-1 px-4 sm:px-20 text-center text-white">
+        <h1 className="text-4xl font-bold mt-20 mb-12">Dashboard</h1>
 
         <div className="flex justify-end w-full">
           <Link
@@ -58,8 +61,8 @@ const Dashboard: React.FC = () => {
           </Link>
         </div>
 
-        <div className="w-full max-w-4xl bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="min-w-full bg-white">
+        <div className="w-full max-w-4xl bg-white bg-opacity-50 shadow-md rounded-lg overflow-hidden text-black">
+          <table className="min-w-full bg-white bg-opacity-70">
             <thead>
               <tr>
                 <th className="py-2 px-4 border-b border-gray-200">
@@ -71,7 +74,7 @@ const Dashboard: React.FC = () => {
             <tbody>
               {trivias.map((trivia) => (
                 <tr key={trivia.id}>
-                  <td className="py-2 px-4 border-b border-gray-200">
+                  <td className="py-2 px-4 border-b border-gray-200 text-2xl">
                     {trivia.name}
                   </td>
                   <td className="py-2 px-4 border-b border-gray-200">

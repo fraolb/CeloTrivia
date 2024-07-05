@@ -34,21 +34,24 @@ export default function Home() {
   return (
     <div>
       {isConnected ? (
-        <div className="flex flex-col items-center justify-center min-h-screen py-2 bg-gray-100">
+        <div
+          className="flex flex-col items-center justify-center min-h-screen py-2 bg-cover bg-center"
+          style={{ backgroundImage: "url('/4.png')" }}
+        >
           <Head>
             <title>Trivia App</title>
             <link rel="icon" href="/favicon.ico" />
           </Head>
 
-          <main className="flex flex-col items-center w-full flex-1 px-5 md:px-20 text-center">
-            <h1 className="text-4xl font-bold mt-6 mb-12">
-              Welcome to Trivia App
+          <main className="flex flex-col items-center w-full text-white flex-1 px-5 md:px-20 text-center">
+            <h1 className="text-3xl font-bold mt-24 mb-12 ">
+              Welcome to Celo Trivia
             </h1>
 
-            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md border border-solid">
+            <div className="w-full max-w-md p-8 mt-20 rounded-lg shadow-md border border-solid bg-white bg-opacity-50">
               <input
                 type="text"
-                placeholder="Enter Quiz Code"
+                placeholder="Enter Trivia Code"
                 onChange={(event) => {
                   setRoom(event.target.value);
                 }}
@@ -56,7 +59,7 @@ export default function Home() {
               />
               <button
                 onClick={() => handleJoin()}
-                className="w-full p-3 mb-4 text-lg font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 mb-4 text-lg font-semibold text-white bg-blue-700 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 Join Trivia
               </button>
@@ -64,15 +67,13 @@ export default function Home() {
 
             <Link
               href={"/dashboard"}
-              className="fixed bottom-10 p-3 text-lg font-semibold text-white bg-green-500 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="fixed bottom-10 p-3 px-6 text-lg font-semibold text-white bg-green-500 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               Create Trivia
             </Link>
           </main>
         </div>
       ) : (
-        //   </div>
-        // </div>
         <div>No Wallet Connected</div>
       )}
     </div>
