@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { FaTrash, FaPlus, FaPlay } from "react-icons/fa";
+import { MdEdit } from "react-icons/md";
 import { useRouter } from "next/router";
-import io from "socket.io-client";
+import PrizeModal from "@/components/PrizeModal";
 
 interface Trivia {
   id: number;
@@ -16,27 +17,33 @@ const Dashboard: React.FC = () => {
     { id: 2, name: "Trivia 2" },
     { id: 3, name: "Trivia 3" },
   ]);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentTriviaId, setCurrentTriviaId] = useState<number | null>(null);
   const router = useRouter();
-  // const socket = io("http://localhost:3001", {
-  //   auth: { isCreator: true }, // Send authentication info
-  // });
 
   const handleDelete = (id: number) => {
     setTrivias(trivias.filter((trivia) => trivia.id !== id));
   };
 
   const handleHost = (triviaId: number) => {
-    //const roomId = Math.random().toString(36).substring(2, 10); // Generate a random room ID
-    const room = triviaId;
-    // socket.emit("create_room", room, (response: any) => {
-    //   console.log("the response is ", response);
-    //   if (response.success) {
-    router.push(`/host/${room}`);
-    //   } else {
-    //     console.error(response.error);
-    //   }
-    // });
+    setCurrentTriviaId(triviaId);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmPrizes = (prizes: number[]) => {
+    const numberOfPrizes = prizes.length;
+    const totalPrizeValue = prizes.reduce((sum, prize) => sum + prize, 0);
+
+    console.log(`Number of prizes: ${numberOfPrizes}`);
+    console.log(`Total prize value: ${totalPrizeValue}`);
+    console.log(
+      `Hosting trivia with ID ${currentTriviaId} with prizes: ${prizes}`
+    );
+
+    // Navigate to host page with prize info
+    if (currentTriviaId !== null) {
+      // router.push(`/host/${currentTriviaId}?prizes=${JSON.stringify(prizes)}`);
+    }
   };
 
   return (
@@ -61,8 +68,8 @@ const Dashboard: React.FC = () => {
           </Link>
         </div>
 
-        <div className="w-full max-w-4xl bg-white bg-opacity-50 shadow-md rounded-lg overflow-hidden text-black">
-          <table className="min-w-full bg-white bg-opacity-70">
+        <div className="w-full max-w-4xl bg-white shadow-md rounded-lg overflow-hidden text-black">
+          <table className="min-w-full bg-white ">
             <thead>
               <tr>
                 <th className="py-2 px-4 border-b border-gray-200">
@@ -79,10 +86,13 @@ const Dashboard: React.FC = () => {
                   </td>
                   <td className="py-2 px-4 border-b border-gray-200">
                     <button
-                      className="text-green-500 hover:text-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-900 p-2 rounded-2xl"
                       onClick={() => handleHost(trivia.id)}
                     >
-                      <FaPlay />
+                      <FaPlay className="text-white pl-1" />
+                    </button>
+                    <button className="text-blue-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-4">
+                      <MdEdit />
                     </button>
                     <button
                       className="text-red-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 ml-4"
@@ -96,6 +106,18 @@ const Dashboard: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        <PrizeModal
+          isOpen={isModalOpen}
+          onFreeTrivia={() => {
+            setIsModalOpen(false);
+            router.push(`/host/${currentTriviaId}`);
+          }}
+          onClose={() => {
+            setIsModalOpen(false);
+          }}
+          onConfirm={handleConfirmPrizes}
+        />
       </main>
     </div>
   );
