@@ -96,7 +96,9 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           </button>
         </div>
       )}
-      <div className="flex justify-start">Q{id}</div>
+      <div className="flex justify-start text-blue-600 text-lg">
+        Question {id + 1}
+      </div>
       <div className="flex flex-col items-center pt-4">
         <input
           type="text"
@@ -105,7 +107,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           onChange={(e) => setQuestion(e.target.value)}
           className="w-full p-2 mb-4 border border-gray-300 rounded-md"
         />
-        <div className="relative w-full h-40 mb-4 flex justify-center items-center">
+        <div className="relative w-1/2 h-20 mb-4 flex justify-center items-center">
           <input
             type="file"
             accept="image/*"
@@ -175,7 +177,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         )}
         <div className="flex justify-between w-full">
           <button
-            className="mt-4 bg-green-600 text-white p-2 rounded-lg flex"
+            className="mt-4 bg-green-600 text-white p-2 px-4 rounded-lg flex"
             onClick={addQuestion}
           >
             Add <FaCheck className="ml-2 mt-1 text-white" />
