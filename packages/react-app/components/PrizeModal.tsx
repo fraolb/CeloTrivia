@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import { IoIosClose } from "react-icons/io";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   onFreeTrivia: () => void;
   onConfirm: (prizes: number[]) => void;
+  status: string;
+  closeModal: () => void;
 }
 
 const PrizeModal: React.FC<ModalProps> = ({
@@ -12,6 +15,8 @@ const PrizeModal: React.FC<ModalProps> = ({
   onClose,
   onConfirm,
   onFreeTrivia,
+  status,
+  closeModal,
 }) => {
   const [step, setStep] = useState<number>(1);
   const [prizes, setPrizes] = useState<number[]>([0]);
@@ -45,7 +50,15 @@ const PrizeModal: React.FC<ModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-white p-4 rounded shadow-lg md:w-1/3 text-black">
+      <div className="bg-white p-4 rounded shadow-lg md:w-3/5 text-black">
+        <div className="flex justify-end">
+          <button
+            className="text-white bg-red-500 rounded-lg text-4xl"
+            onClick={() => closeModal()}
+          >
+            <IoIosClose />
+          </button>
+        </div>
         {step === 1 ? (
           <>
             <h2 className="text-xl mb-4">
@@ -91,18 +104,46 @@ const PrizeModal: React.FC<ModalProps> = ({
               Add Another Prize
             </button>
             <div className="flex justify-end">
-              <button
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
-                onClick={handleClose}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                onClick={handleConfirm}
-              >
-                Confirm
-              </button>
+              {status == "pending" ? (
+                <div className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin h-5 w-5 mr-3 text-black"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path>
+                  </svg>
+                  Pending...
+                </div>
+              ) : (
+                <div>
+                  <button
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
+                    onClick={handleClose}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                    onClick={handleConfirm}
+                  >
+                    Confirm
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}

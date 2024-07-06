@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { FaTrash, FaPlus, FaPlay } from "react-icons/fa";
@@ -6,12 +6,28 @@ import { MdEdit } from "react-icons/md";
 import { useRouter } from "next/router";
 import PrizeModal from "@/components/PrizeModal";
 
+// smart contract imports
+import {
+  type BaseError,
+  useAccount,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { watchContractEvent } from "@wagmi/core";
+import { ethers } from "ethers";
+import { parseEther } from "viem";
+import { parseGwei } from "viem";
+import { newKit } from "@celo/contractkit";
+import CeloTriviaABI from "../../ContractABI/CeloTriviaABI.json";
+import { config } from "@/config";
+
 interface Trivia {
   id: number;
   name: string;
 }
 
 const Dashboard: React.FC = () => {
+  const { address, isConnected, chainId } = useAccount();
   const [trivias, setTrivias] = useState<Trivia[]>([
     { id: 1, name: "Trivia 1" },
     { id: 2, name: "Trivia 2" },
@@ -20,6 +36,22 @@ const Dashboard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTriviaId, setCurrentTriviaId] = useState<number | null>(null);
   const router = useRouter();
+
+  ///smart contract part
+  const [isLoading, setIsLoading] = useState(false);
+  const CeloTriviaTestnet = "0xa889a8012f017Ec7B3DaFb428A0FCf06E6c8e490";
+  const {
+    data: hash,
+    error,
+    isPending,
+    status,
+    writeContract,
+  } = useWriteContract();
+  const transactionExplorerUrl = useMemo(() => {
+    return chainId == 42220
+      ? `https://celoscan.io/tx/${hash}`
+      : `https://explorer.celo.org/alfajores/tx/${hash}`;
+  }, [hash]);
 
   const handleDelete = (id: number) => {
     setTrivias(trivias.filter((trivia) => trivia.id !== id));
@@ -30,7 +62,7 @@ const Dashboard: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleConfirmPrizes = (prizes: number[]) => {
+  const handleConfirmPrizes = async (prizes: number[]) => {
     const numberOfPrizes = prizes.length;
     const totalPrizeValue = prizes.reduce((sum, prize) => sum + prize, 0);
 
@@ -40,11 +72,42 @@ const Dashboard: React.FC = () => {
       `Hosting trivia with ID ${currentTriviaId} with prizes: ${prizes}`
     );
 
-    // Navigate to host page with prize info
-    if (currentTriviaId !== null) {
-      // router.push(`/host/${currentTriviaId}?prizes=${JSON.stringify(prizes)}`);
+    if (currentTriviaId !== null && address) {
+      try {
+        const key = Math.floor(Math.random() * 1_000_000_000);
+        console.log("the key is ", key);
+        await writeContract({
+          address: CeloTriviaTestnet,
+          account: address,
+          abi: CeloTriviaABI,
+          functionName: "deposit",
+          args: [key],
+          value: parseEther(`${totalPrizeValue}`),
+        });
+      } catch (error) {
+        console.error("Transaction error:", error);
+        setIsLoading(false);
+      }
     }
   };
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
+
+  useEffect(() => {
+    if (isConfirming) {
+      console.log("Pending transaction...");
+    }
+
+    if (isConfirmed) {
+      console.log("Transaction confirmed:", hash);
+      setIsLoading(false);
+      setIsModalOpen(false);
+      router.push(`/host/${currentTriviaId}`);
+    }
+  }, [isLoading, isConfirmed, hash]);
 
   return (
     <div
@@ -117,7 +180,56 @@ const Dashboard: React.FC = () => {
             setIsModalOpen(false);
           }}
           onConfirm={handleConfirmPrizes}
+          status={status}
+          closeModal={() => {
+            setIsModalOpen(false);
+          }}
         />
+        <div>
+          {isConfirming && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-65">
+              <div className="bg-white p-4 rounded shadow-lg w-1/3 text-black">
+                <h2 className="text-xl mb-4">Transaction is processing...</h2>
+                <p>Please wait while the transaction is being confirmed.</p>
+              </div>
+            </div>
+          )}
+        </div>
+        <div>
+          {status == "pending" && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-65">
+              <div className="bg-white p-4 rounded shadow-lg w-1/3 text-black">
+                <h2 className="text-xl mb-4">STransaction is processing...</h2>
+                <p>Please wait while the transaction is being confirmed.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="w-full flex flex-wrap">
+          {hash && (
+            <div className="w-full">
+              Transaction Hash:{" "}
+              <a
+                className="align-center text-xs text-mainHard"
+                href={transactionExplorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {hash.substring(0, 8)}...{hash.substring(hash.length - 6)}
+              </a>
+            </div>
+          )}
+          {isConfirming && (
+            <div className="w-full">Waiting for confirmation...</div>
+          )}
+          {isConfirmed && <div className="w-full">Transaction confirmed.</div>}
+          {error && (
+            <div className="w-80">
+              Error: {(error as BaseError).shortMessage || error.message}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
