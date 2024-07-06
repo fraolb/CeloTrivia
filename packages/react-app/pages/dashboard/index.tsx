@@ -75,44 +75,42 @@ const Dashboard: React.FC = () => {
       `Hosting trivia with ID ${currentTriviaId} with prizes: ${prizes}`
     );
 
-    if (currentTriviaId !== null && address && window.ethereum) {
+    if (currentTriviaId !== null && address) {
       const client = createWalletClient({
         chain: celoAlfajores,
-        transport: custom(window.ethereum),
+        transport: http(),
       });
 
       const publicClient = createPublicClient({
         chain: celoAlfajores,
-        transport: custom(window.ethereum),
+        transport: http(),
       });
 
       try {
         const key = Math.floor(Math.random() * 1_000_000_000);
         console.log("the key is ", key);
-
-        const sendToken = await client.writeContract({
-          address: CeloTriviaTestnet,
-          abi: CeloTriviaABI,
-          functionName: "deposit",
-          args: [key],
-          value: parseEther(`${totalPrizeValue}`),
-          account: address,
-        });
         setStatus("pending");
-        setIsLoading(true);
-
-        const sendTokenTx = await publicClient.waitForTransactionReceipt({
-          hash: sendToken,
-        });
-
-        if (sendTokenTx.status === "success") {
-          setIsLoading(false);
-          setIsModalOpen(false);
-          setStatus("");
-          router.push(`/host/${currentTriviaId}`);
-        } else {
-          console.log("Transaction error!");
-        }
+        writeContract(
+          {
+            address: CeloTriviaTestnet,
+            abi: CeloTriviaABI,
+            functionName: "deposit",
+            args: [key],
+            value: parseEther(`${totalPrizeValue}`),
+          },
+          {
+            onError: (error) => {
+              console.log("Transaction error!");
+              console.log(error);
+            },
+            onSuccess: () => {
+              setIsLoading(false);
+              setIsModalOpen(false);
+              setStatus("");
+              router.push(`/host/${currentTriviaId}`);
+            },
+          }
+        );
       } catch (error) {
         console.error("Transaction error:", error);
         setIsLoading(false);
@@ -258,6 +256,7 @@ const Dashboard: React.FC = () => {
               Error: {(error as BaseError).shortMessage || error.message}
             </div>
           )} */}
+          <div>the status is {status}</div>
         </div>
       </main>
     </div>
