@@ -47,6 +47,7 @@ export default function Home() {
             <h1 className="text-3xl font-bold mt-24 mb-12 ">
               Welcome to Celo Trivia
             </h1>
+            <Link href={"/Tokens"}>check balance</Link>
 
             <div className="w-full max-w-md p-8 mt-20 rounded-lg shadow-md border border-solid bg-white bg-opacity-50">
               <input
