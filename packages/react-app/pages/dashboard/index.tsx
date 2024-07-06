@@ -15,11 +15,13 @@ import {
 } from "wagmi";
 import { watchContractEvent } from "@wagmi/core";
 import { ethers } from "ethers";
-import { parseEther } from "viem";
+import { custom, parseEther } from "viem";
 import { parseGwei } from "viem";
 import { newKit } from "@celo/contractkit";
 import CeloTriviaABI from "../../ContractABI/CeloTriviaABI.json";
 import { config } from "@/config";
+import { createWalletClient, createPublicClient, http } from "viem";
+import { celoAlfajores } from "viem/chains";
 
 interface Trivia {
   id: number;
@@ -34,6 +36,7 @@ const Dashboard: React.FC = () => {
     { id: 3, name: "Trivia 3" },
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [status, setStatus] = useState("");
   const [currentTriviaId, setCurrentTriviaId] = useState<number | null>(null);
   const router = useRouter();
 
@@ -44,7 +47,7 @@ const Dashboard: React.FC = () => {
     data: hash,
     error,
     isPending,
-    status,
+    // status,
     writeContract,
   } = useWriteContract();
   const transactionExplorerUrl = useMemo(() => {
@@ -72,18 +75,44 @@ const Dashboard: React.FC = () => {
       `Hosting trivia with ID ${currentTriviaId} with prizes: ${prizes}`
     );
 
-    if (currentTriviaId !== null && address) {
+    if (currentTriviaId !== null && address && window.ethereum) {
+      const client = createWalletClient({
+        chain: celoAlfajores,
+        transport: custom(window.ethereum),
+      });
+
+      const publicClient = createPublicClient({
+        chain: celoAlfajores,
+        transport: custom(window.ethereum),
+      });
+
       try {
         const key = Math.floor(Math.random() * 1_000_000_000);
         console.log("the key is ", key);
-        await writeContract({
+
+        const sendToken = await client.writeContract({
           address: CeloTriviaTestnet,
-          account: address,
           abi: CeloTriviaABI,
           functionName: "deposit",
           args: [key],
           value: parseEther(`${totalPrizeValue}`),
+          account: address,
         });
+        setStatus("pending");
+        setIsLoading(true);
+
+        const sendTokenTx = await publicClient.waitForTransactionReceipt({
+          hash: sendToken,
+        });
+
+        if (sendTokenTx.status === "success") {
+          setIsLoading(false);
+          setIsModalOpen(false);
+          setStatus("");
+          router.push(`/host/${currentTriviaId}`);
+        } else {
+          console.log("Transaction error!");
+        }
       } catch (error) {
         console.error("Transaction error:", error);
         setIsLoading(false);
@@ -91,23 +120,23 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash,
-    });
+  // const { isLoading: isConfirming, isSuccess: isConfirmed } =
+  //   useWaitForTransactionReceipt({
+  //     hash,
+  //   });
 
-  useEffect(() => {
-    if (isConfirming) {
-      console.log("Pending transaction...");
-    }
+  // useEffect(() => {
+  //   if (isConfirming) {
+  //     console.log("Pending transaction...");
+  //   }
 
-    if (isConfirmed) {
-      console.log("Transaction confirmed:", hash);
-      setIsLoading(false);
-      setIsModalOpen(false);
-      router.push(`/host/${currentTriviaId}`);
-    }
-  }, [isLoading, isConfirmed, hash]);
+  //   if (isConfirmed) {
+  //     console.log("Transaction confirmed:", hash);
+  //     setIsLoading(false);
+  //     setIsModalOpen(false);
+  //     router.push(`/host/${currentTriviaId}`);
+  //   }
+  // }, [isLoading, isConfirmed, hash]);
 
   return (
     <div
@@ -186,14 +215,14 @@ const Dashboard: React.FC = () => {
           }}
         />
         <div>
-          {isConfirming && (
+          {/* {isConfirming && (
             <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-65">
               <div className="bg-white p-4 rounded shadow-lg w-1/3 text-black">
                 <h2 className="text-xl mb-4">Transaction is processing...</h2>
                 <p>Please wait while the transaction is being confirmed.</p>
               </div>
             </div>
-          )}
+          )} */}
         </div>
         <div>
           {status == "pending" && (
@@ -220,7 +249,7 @@ const Dashboard: React.FC = () => {
               </a>
             </div>
           )}
-          {isConfirming && (
+          {/* {isConfirming && (
             <div className="w-full">Waiting for confirmation...</div>
           )}
           {isConfirmed && <div className="w-full">Transaction confirmed.</div>}
@@ -228,7 +257,7 @@ const Dashboard: React.FC = () => {
             <div className="w-80">
               Error: {(error as BaseError).shortMessage || error.message}
             </div>
-          )}
+          )} */}
         </div>
       </main>
     </div>
