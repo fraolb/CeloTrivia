@@ -6,11 +6,11 @@
   "author": "Celo",
   "license": "MIT",
   "scripts": {
-    "react-app:dev": "yarn workspace @CeloTunes/react-app dev",
-    "react-app:build": "yarn workspace @CeloTunes/react-app build",
-    "react-app:start": "yarn workspace @CeloTunes/react-app start",
-    "react-app:lint": "yarn workspace @CeloTunes/react-app lint",
-    "hardhat:compile": "yarn workspace @CeloTunes/hardhat compile"
+    "react-app:dev": "yarn workspace @CeloTrivia/react-app dev",
+    "react-app:build": "yarn workspace @CeloTrivia/react-app build",
+    "react-app:start": "yarn workspace @CeloTrivia/react-app start",
+    "react-app:lint": "yarn workspace @CeloTrivia/react-app lint",
+    "hardhat:compile": "yarn workspace @CeloTrivia/hardhat compile"
   },
   "repository": {
     "type": "git",
