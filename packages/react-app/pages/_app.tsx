@@ -52,14 +52,14 @@ function App({ Component, pageProps }: AppProps) {
         <RainbowKitProvider>
           <ThemeProvider attribute="class">
             <UserProvider>
-              {/* <Layout> */}
-              <Head>
-                <link rel="icon" href="/CTIcon.png" />
+              <Layout>
+                <Head>
+                  <link rel="icon" href="/CTIcon.png" />
 
-                <title>CeloTrivia</title>
-              </Head>
-              <Component {...pageProps} />
-              {/* </Layout> */}
+                  <title>CeloTrivia</title>
+                </Head>
+                <Component {...pageProps} />
+              </Layout>
             </UserProvider>
           </ThemeProvider>
         </RainbowKitProvider>
