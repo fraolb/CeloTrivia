@@ -78,7 +78,7 @@ const Dashboard: React.FC = () => {
     if (currentTriviaId !== null && address) {
       const client = createWalletClient({
         chain: celoAlfajores,
-        transport: http(),
+        transport: custom(window.ethereum!),
       });
 
       const publicClient = createPublicClient({
@@ -90,27 +90,51 @@ const Dashboard: React.FC = () => {
         const key = Math.floor(Math.random() * 1_000_000_000);
         console.log("the key is ", key);
         setStatus("pending");
-        writeContract(
-          {
-            address: CeloTriviaTestnet,
-            abi: CeloTriviaABI,
-            functionName: "deposit",
-            args: [key],
-            value: parseEther(`${totalPrizeValue}`),
-          },
-          {
-            onError: (error) => {
-              console.log("Transaction error!");
-              console.log(error);
-            },
-            onSuccess: () => {
-              setIsLoading(false);
-              setIsModalOpen(false);
-              setStatus("");
-              router.push(`/host/${currentTriviaId}`);
-            },
-          }
-        );
+
+        const payForTrivia = await client.writeContract({
+          account: address,
+          address: CeloTriviaTestnet,
+          abi: CeloTriviaABI,
+          functionName: "deposit",
+          args: [key],
+          value: parseEther(`${totalPrizeValue}`),
+        });
+        const payForTriviaTxnReceipt =
+          await publicClient.waitForTransactionReceipt({
+            hash: payForTrivia,
+          });
+
+        if (payForTriviaTxnReceipt.status == "success") {
+          setIsLoading(false);
+          setIsModalOpen(false);
+          setStatus("");
+          router.push(`/host/${currentTriviaId}`);
+        } else {
+          console.log("Transaction error!");
+          console.log(error);
+        }
+
+        // writeContract(
+        //   {
+        //     address: CeloTriviaTestnet,
+        //     abi: CeloTriviaABI,
+        //     functionName: "deposit",
+        //     args: [key],
+        //     value: parseEther(`${totalPrizeValue}`),
+        //   },
+        //   {
+        //     onError: (error) => {
+        //       console.log("Transaction error!");
+        //       console.log(error);
+        //     },
+        //     onSuccess: () => {
+        //       setIsLoading(false);
+        //       setIsModalOpen(false);
+        //       setStatus("");
+        //       router.push(`/host/${currentTriviaId}`);
+        //     },
+        //   }
+        // );
       } catch (error) {
         console.error("Transaction error:", error);
         setIsLoading(false);
