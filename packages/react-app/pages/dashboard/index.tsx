@@ -110,6 +110,7 @@ const Dashboard: React.FC = () => {
           setStatus("");
           router.push(`/host/${currentTriviaId}`);
         } else {
+          setStatus(`error ${error}`);
           console.log("Transaction error!");
           console.log(error);
         }
