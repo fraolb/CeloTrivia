@@ -91,29 +91,34 @@ const Dashboard: React.FC = () => {
         console.log("the key is ", key);
         setStatus("pending");
 
-        const payForTrivia = await client.writeContract({
-          account: address,
-          address: CeloTriviaTestnet,
-          abi: CeloTriviaABI,
-          functionName: "deposit",
-          args: [key],
-          value: parseEther(`${totalPrizeValue}`),
-        });
-        const payForTriviaTxnReceipt =
-          await publicClient.waitForTransactionReceipt({
-            hash: payForTrivia,
-          });
+        // const payForTrivia = await client.writeContract({
+        //   account: address,
+        //   address: CeloTriviaTestnet,
+        //   abi: CeloTriviaABI,
+        //   functionName: "deposit",
+        //   args: [key],
+        //   value: parseEther(`${totalPrizeValue}`),
+        // });
+        // const payForTriviaTxnReceipt =
+        //   await publicClient.waitForTransactionReceipt({
+        //     hash: payForTrivia,
+        //   });
 
-        if (payForTriviaTxnReceipt.status == "success") {
-          setIsLoading(false);
-          setIsModalOpen(false);
-          setStatus("");
-          router.push(`/host/${currentTriviaId}`);
-        } else {
-          setStatus(`error ${error}`);
-          console.log("Transaction error!");
-          console.log(error);
-        }
+        // if (payForTriviaTxnReceipt.status == "success") {
+        //   setIsLoading(false);
+        //   setIsModalOpen(false);
+        //   setStatus("");
+        //   router.push(`/host/${currentTriviaId}`);
+        // } else {
+        //   setStatus(`error ${error}`);
+        //   console.log("Transaction error!");
+        //   console.log(error);
+        // }
+
+        setIsLoading(false);
+        setIsModalOpen(false);
+        setStatus("");
+        router.push(`/host/${currentTriviaId}`);
 
         // writeContract(
         //   {
@@ -168,7 +173,7 @@ const Dashboard: React.FC = () => {
     >
       <Head>
         <title>Dashboard</title>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/CTIcon.png" />
       </Head>
 
       <main className="flex flex-col items-center w-full flex-1 px-4 sm:px-20 text-center text-white">
