@@ -16,6 +16,7 @@ const io = new Server(server, {
 });
 
 const rooms = {};
+const userCounts = {};
 
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
@@ -31,6 +32,7 @@ io.on("connection", (socket) => {
   socket.on("create_room", (room) => {
     if (isAuthenticated(socket)) {
       rooms[room] = socket.id; // Store the creator's socket ID
+      userCounts[room] = 0;
       socket.join(room);
       console.log(`Room ${room} created by ${socket.id}`);
       socket.emit("room_created", room);
@@ -40,7 +42,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("check_room", (room) => {
-    if (room[room]) {
+    if (rooms[room]) {
       socket.emit("room_exists", room);
     } else {
       socket.emit("error", "Room does not exist.");
@@ -49,11 +51,36 @@ io.on("connection", (socket) => {
 
   socket.on("join_room", (room) => {
     if (rooms[room]) {
+      userCounts[room] += 1;
       socket.join(room);
       console.log(`User ${socket.id} joined room ${room}`);
       socket.emit("room_joined", room);
     } else {
       socket.emit("error", "Room does not exist.");
+    }
+  });
+
+  socket.on("leave_room", (room) => {
+    if (rooms[room]) {
+      socket.leave(room);
+      userCounts[room] -= 1;
+      console.log(
+        `User left room ${room}. Current user count: ${userCounts[room]}`
+      );
+      io.to(room).emit("update_user_count", userCounts[room]);
+    } else {
+      socket.emit("error", "Room does not exist.");
+    }
+  });
+
+  socket.on("disconnect", () => {
+    for (const room in rooms) {
+      if (rooms[room] === socket.id) {
+        delete rooms[room];
+        delete userCounts[room];
+        console.log(`Room ${room} deleted as its creator disconnected.`);
+        io.to(room).emit("room_deleted");
+      }
     }
   });
 
