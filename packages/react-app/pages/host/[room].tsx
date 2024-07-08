@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import io from "socket.io-client";
+import { isNull } from "util";
 
 interface Question {
   text: string;
@@ -36,6 +37,11 @@ const HostPage = () => {
       text: "What is 2 + 2?",
       choices: ["3", "4", "5", "6"],
       answer: "4",
+    },
+    {
+      text: "2 + 2 is 4",
+      choices: ["True", "False"],
+      answer: "True",
     },
     // Add more questions as needed
   ]);
@@ -94,6 +100,21 @@ const HostPage = () => {
     startQuestionTimer(qIndex);
   };
 
+  const finishQuestion = () => {
+    // Convert totalUserAnswers object to an array of [user, points] pairs
+    const userPointsArray = Object.entries(totalUserAnswers);
+
+    // Sort the array by points in descending order
+    userPointsArray.sort((a, b) => b[1] - a[1]);
+
+    // Get the top 3 scorers
+    const winners = userPointsArray.slice(0, 3);
+    console.log("the winners are ", winners);
+
+    // Emit the quiz_finished event with the top scorers
+    socket.emit("close_quiz", { room, winners });
+  };
+
   useEffect(() => {
     if (room) {
       socket.emit("create_room", room);
@@ -124,6 +145,13 @@ const HostPage = () => {
           });
         }
       });
+
+      socket.on("update_user_count", (count) => {
+        console.log(`Current user count in room ${room}: ${count}`);
+      });
+      socket.on("room_joined", (count) => {
+        console.log(`current ppl join in room is ${count} `);
+      });
     }
 
     return () => {
@@ -133,16 +161,19 @@ const HostPage = () => {
   }, [room, questionIndex]);
 
   return (
-    <div className="flex flex-col items-center min-h-screen py-2 bg-gray-100">
-      <h1 className="text-4xl font-bold mt-6 mb-12">Host Page</h1>
-      <p className="text-2xl mb-4">Room ID: {room}</p>
+    <div
+      className="flex flex-col items-center min-h-screen py-2 bg-cover bg-center text-white"
+      style={{ backgroundImage: "url('/4.png')" }}
+    >
+      <h1 className="text-4xl font-bold mt-8 mb-12">Host Page</h1>
+      <p className="text-2xl mb-1">Trivia ID: {room}</p>
       <button
         onClick={() => navigator.clipboard.writeText(room as string)}
-        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 mb-12"
       >
         Copy Room ID
       </button>
-      <div>
+      {/* <div>
         <input
           placeholder="Message..."
           onChange={(event) => {
@@ -152,11 +183,11 @@ const HostPage = () => {
         <button onClick={sendMessage}>Send Message</button>
         <h1>Message:</h1>
         {messageReceived}
-      </div>
+      </div> */}
       {!quizStarted && countdown === 0 ? (
         <button
           onClick={startQuiz}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-4"
+          className="px-6 py-3 bg-blue-500 text-white text-xl font-bold rounded-md hover:bg-blue-600 mt-4"
         >
           Start Quiz
         </button>
@@ -167,16 +198,36 @@ const HostPage = () => {
           )}
           {quizStarted && (
             <div>
-              <h2 className="text-2xl mt-4">{questions[questionIndex].text}</h2>
-              <ul>
-                {questions[questionIndex].choices.map((choice, index) => (
-                  <li key={index}>{choice}</li>
-                ))}
-              </ul>
-              <h2 className="text-2xl mt-4">Time remaining: {countdown}</h2>
+              <div>
+                {!showAnswer && (
+                  <div>
+                    <h2 className="w-full p-2 mb-4 border border-gray-300 rounded-md text-center text-2xl">
+                      {questions[questionIndex].text}
+                    </h2>
+                    <ul>
+                      <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-4">
+                        {questions[questionIndex].choices.map(
+                          (choice, index) => (
+                            <div
+                              key={index}
+                              className="w-full p-2 border border-gray-300 rounded-md text-2xl hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:text-white"
+                            >
+                              {choice}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </ul>
+                  </div>
+                )}
+              </div>
+              {countdown !== 0 && (
+                <h2 className="text-2xl mt-4">Time remaining: {countdown}</h2>
+              )}
+
               {showAnswer && (
                 <div className="mt-4">
-                  <h3 className="text-xl">
+                  <h3 className="text-xl text-center">
                     Answer: {questions[questionIndex].answer}
                   </h3>
                   <h3 className="text-xl mt-4">
@@ -186,7 +237,8 @@ const HostPage = () => {
                     {userAnswers.length > 0 ? (
                       userAnswers.map((user, index) => (
                         <li key={index}>
-                          {user.id}, Pt - {user.point}
+                          {user.id.slice(0, 4)}...{user.id.slice(-4)}, Pt -{" "}
+                          {user.point}
                         </li>
                       ))
                     ) : (
@@ -194,12 +246,24 @@ const HostPage = () => {
                     )}
                   </ul>
                   {questions.length > questionIndex + 1 && (
-                    <button
-                      onClick={nextQuestion}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-4"
-                    >
-                      Next Question
-                    </button>
+                    <div className="flex justify-center w-full">
+                      <button
+                        onClick={nextQuestion}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-4"
+                      >
+                        Next Question
+                      </button>
+                    </div>
+                  )}
+                  {questions.length == questionIndex + 1 && (
+                    <div className="flex justify-center w-full">
+                      <button
+                        onClick={finishQuestion}
+                        className="px-4 py-2 bg-blue-500 text-white text-center rounded-md hover:bg-blue-600 mt-4"
+                      >
+                        Finish Quiz
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -208,11 +272,14 @@ const HostPage = () => {
         </div>
       )}
       <div className="mt-4">
-        <h3 className="text-2xl">Total User Points:</h3>
+        {totalUserAnswers.length > 0 && (
+          <h3 className="text-2xl">Total User Points:</h3>
+        )}
+
         <ul>
           {Object.entries(totalUserAnswers).map(([userId, points], index) => (
             <li key={index}>
-              {userId}: {points} points
+              {userId.slice(0, 4)}...{userId.slice(-4)} : {points} points
             </li>
           ))}
         </ul>
