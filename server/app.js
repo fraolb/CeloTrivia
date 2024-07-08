@@ -17,6 +17,7 @@ const io = new Server(server, {
 
 const rooms = {};
 const userCounts = {};
+const userNames = {};
 
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
@@ -33,6 +34,7 @@ io.on("connection", (socket) => {
     if (isAuthenticated(socket)) {
       rooms[room] = socket.id; // Store the creator's socket ID
       userCounts[room] = 0;
+      userNames[room] = [];
       socket.join(room);
       console.log(`Room ${room} created by ${socket.id}`);
       socket.emit("room_created", room);
@@ -53,11 +55,24 @@ io.on("connection", (socket) => {
     if (rooms[room]) {
       userCounts[room] += 1;
       socket.join(room);
-      console.log(`User ${socket.id} joined room ${room}`);
-      socket.emit("room_joined", room);
+      console.log(
+        `User ${socket.id} joined room ${room}, room count ${userCounts[room]}`
+      );
+      socket.emit("room_joined", userCounts[room]);
     } else {
       socket.emit("error", "Room does not exist.");
     }
+  });
+
+  socket.on("add_name", (data) => {
+    const { room, name } = data;
+    console.log("the name is ", name);
+    if (!userNames[room]) {
+      userNames[room] = [];
+    }
+
+    userNames[room].push(name);
+    socket.to(room).emit("user_joined", userNames[room]);
   });
 
   socket.on("leave_room", (room) => {
@@ -103,8 +118,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("answer_question", (data) => {
-    const { room, answer } = data;
-    const userAnswer = { answer: answer, id: socket.id };
+    const { room, answer, name } = data;
+    const userAnswer = { answer: answer, id: name };
     socket.to(room).emit("receive_users_answer", userAnswer);
   });
 
