@@ -50,7 +50,9 @@ const HostPage = () => {
   const [totalUserAnswers, setTotalUserAnswers] = useState<{
     [key: string]: number;
   }>({});
+  const [playerNames, setPlayerNames] = useState([]);
   const [countdown, setCountdown] = useState<number>(0);
+  const [winners, setWinners] = useState<[string, number][]>([]);
 
   const sendMessage = () => {
     socket.emit("send_message", { message, room });
@@ -110,6 +112,7 @@ const HostPage = () => {
     // Get the top 3 scorers
     const winners = userPointsArray.slice(0, 3);
     console.log("the winners are ", winners);
+    setWinners(winners);
 
     // Emit the quiz_finished event with the top scorers
     socket.emit("close_quiz", { room, winners });
@@ -126,6 +129,10 @@ const HostPage = () => {
     if (room) {
       socket.on("receive_message", (data) => {
         setMessageReceived(data.message);
+      });
+      socket.on("user_joined", (data) => {
+        console.log("the players name is ", data);
+        setPlayerNames(data);
       });
       socket.on("receive_users_answer", (data: UserAnswer) => {
         const point = data.answer === questions[questionIndex].answer ? 1 : 0;
@@ -157,6 +164,7 @@ const HostPage = () => {
     return () => {
       socket.off("receive_message");
       socket.off("receive_users_answer");
+      socket.off("user_joined");
     };
   }, [room, questionIndex]);
 
@@ -173,17 +181,7 @@ const HostPage = () => {
       >
         Copy Room ID
       </button>
-      {/* <div>
-        <input
-          placeholder="Message..."
-          onChange={(event) => {
-            setMessage(event.target.value);
-          }}
-        />
-        <button onClick={sendMessage}>Send Message</button>
-        <h1>Message:</h1>
-        {messageReceived}
-      </div> */}
+
       {!quizStarted && countdown === 0 ? (
         <button
           onClick={startQuiz}
@@ -237,8 +235,8 @@ const HostPage = () => {
                     {userAnswers.length > 0 ? (
                       userAnswers.map((user, index) => (
                         <li key={index}>
-                          {user.id.slice(0, 4)}...{user.id.slice(-4)}, Pt -{" "}
-                          {user.point}
+                          {/* {user.id.slice(0, 4)}...{user.id.slice(-4)}, Pt -{" "} */}
+                          {user.id} - {user.point}
                         </li>
                       ))
                     ) : (
@@ -271,6 +269,21 @@ const HostPage = () => {
           )}
         </div>
       )}
+      <div className="mt-12">
+        {!quizStarted && (
+          <div className="flex flex-wrap gap-2 p-4">
+            {playerNames.map((name, index) => (
+              <div
+                key={index}
+                className="bg-blue-500 text-white p-1 rounded-lg"
+              >
+                {name}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="mt-4">
         {totalUserAnswers.length > 0 && (
           <h3 className="text-2xl">Total User Points:</h3>
@@ -279,10 +292,31 @@ const HostPage = () => {
         <ul>
           {Object.entries(totalUserAnswers).map(([userId, points], index) => (
             <li key={index}>
-              {userId.slice(0, 4)}...{userId.slice(-4)} : {points} points
+              {/* {userId.slice(0, 4)}...{userId.slice(-4)} : {points} points */}
+              {userId} : {points} points
             </li>
           ))}
         </ul>
+      </div>
+      <div className="flex justify-center space-x-8">
+        {winners.slice(1, 3).map(([userId, points], index) => (
+          <div
+            key={index}
+            className={`flex flex-col p-2 items-center border border-green-500 rounded-2xl`}
+          >
+            <div
+              className={`p-4 rounded-full font-bold flex items-center justify-center text-4xl`}
+            >
+              {index + 2}
+            </div>
+            <div className="text-lg text-center">
+              {/* {userId.slice(0, 4)}...{userId.slice(-4)} */}
+              {userId}
+              <br />
+              {points} points
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
