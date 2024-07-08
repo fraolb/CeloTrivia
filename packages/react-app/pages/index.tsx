@@ -3,11 +3,19 @@ import { useAccount } from "wagmi";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import io from "socket.io-client";
+
+interface notificationInterfact {
+  message: string;
+  type: string;
+}
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const [room, setRoom] = useState<string>("");
   const { address, isConnected } = useAccount();
+  const [notification, setNotification] =
+    useState<notificationInterfact | null>();
   const router = useRouter();
 
   if (typeof window !== "undefined") {
@@ -18,9 +26,21 @@ export default function Home() {
   }
 
   const handleJoin = () => {
-    if (room !== "") {
+    const socket = io("http://localhost:3001");
+
+    socket.emit("check_room", room);
+
+    socket.on("error", (message) => {
+      setNotification({
+        message: message,
+        type: "error",
+      });
+    });
+    socket.on("room_exists", (room) => {
       router.push(`/join/${room}`);
-    }
+    });
+
+    setTimeout(() => setNotification(null), 3000);
   };
 
   useEffect(() => {
@@ -44,6 +64,17 @@ export default function Home() {
           </Head>
 
           <main className="flex flex-col items-center w-full text-white flex-1 px-5 md:px-20 text-center">
+            {notification && (
+              <div
+                className={`fixed top-0 left-1/2 transform -translate-x-1/2 mt-12 p-2 px-4 w-3/4 rounded shadow-lg z-10 ${
+                  notification.type === "success"
+                    ? "bg-green-500"
+                    : "bg-red-500"
+                } text-white`}
+              >
+                {notification.message}
+              </div>
+            )}
             <h1 className="text-3xl font-bold mt-24 mb-12 ">
               Welcome to Celo Trivia
             </h1>
@@ -56,7 +87,7 @@ export default function Home() {
                 onChange={(event) => {
                   setRoom(event.target.value);
                 }}
-                className="w-full p-3 mb-6 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 mb-6 text-black text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 onClick={() => handleJoin()}
