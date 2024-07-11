@@ -29,21 +29,34 @@ import CeloTriviaV3ABI from "../../ContractABI/CeloTriviaV3ABI.json";
 import Web3 from "web3";
 const web3 = new Web3("https://alfajores-forno.celo-testnet.org");
 
+import { TriviaInterface, QuestionInterface } from "@/types/questions";
+import { getUserTrivia } from "@/service/services";
+
 interface Trivia {
-  id: number;
+  _id: number;
   name: string;
+}
+
+export interface UserTriviaInterface {
+  _id: string;
+  walletAddress: string;
+  triviaName: string;
+  questions: QuestionInterface[];
 }
 
 const Dashboard: React.FC = () => {
   const { address, isConnected, chainId } = useAccount();
+  const [userTrivia, setUserTrivia] = useState<UserTriviaInterface[] | null>(
+    null
+  );
   const [trivias, setTrivias] = useState<Trivia[]>([
-    { id: 1, name: "Trivia 1" },
-    { id: 2, name: "Trivia 2" },
-    { id: 3, name: "Trivia 3" },
+    { _id: 1, name: "Trivia 1" },
+    { _id: 2, name: "Trivia 2" },
+    { _id: 3, name: "Trivia 3" },
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [status, setStatus] = useState("");
-  const [currentTriviaId, setCurrentTriviaId] = useState<number | null>(null);
+  const [currentTriviaId, setCurrentTriviaId] = useState<string | null>(null);
   const router = useRouter();
 
   ///smart contract part
@@ -62,18 +75,17 @@ const Dashboard: React.FC = () => {
       ? `https://celoscan.io/tx/${hash}`
       : `https://explorer.celo.org/alfajores/tx/${hash}`;
   }, [hash]);
-  const [test, setTest] = useState("");
 
   const CeloTriviaV3: `0x${string}` =
     "0x8a4193c90d37367eb99F0E820352671FE46EA9c6";
   const cUSDAddress: `0x${string}` =
     "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1";
 
-  const handleDelete = (id: number) => {
-    setTrivias(trivias.filter((trivia) => trivia.id !== id));
+  const handleDelete = (id: string) => {
+    //setTrivias(trivias.filter((trivia) => trivia._id !== id));
   };
 
-  const handleHost = (triviaId: number) => {
+  const handleHost = (triviaId: string) => {
     setCurrentTriviaId(triviaId);
     setIsModalOpen(true);
   };
@@ -118,7 +130,6 @@ const Dashboard: React.FC = () => {
         });
 
         if (approveTxnReceipt.status !== "success") {
-          setTest("Approval failed");
           return false;
         }
 
@@ -157,6 +168,19 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const getUsersTriviaData = async () => {
+    const res = await getUserTrivia(address as string);
+    console.log("the user trivia are ", res);
+    if (res.success == true) {
+      setUserTrivia(res.data);
+    }
+  };
+  useEffect(() => {
+    if (address) {
+      getUsersTriviaData();
+    }
+  }, [address]);
+
   return (
     <div
       className="flex flex-col items-center min-h-screen py-2 bg-cover bg-center"
@@ -190,30 +214,31 @@ const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {trivias.map((trivia) => (
-                <tr key={trivia.id}>
-                  <td className="py-2 px-4 border-b border-gray-200 text-2xl">
-                    {trivia.name}
-                  </td>
-                  <td className="py-2 px-4 border-b border-gray-200">
-                    <button
-                      className="bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-900 p-2 rounded-2xl"
-                      onClick={() => handleHost(trivia.id)}
-                    >
-                      <FaPlay className="text-white pl-1" />
-                    </button>
-                    <button className="text-blue-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-4">
-                      <MdEdit />
-                    </button>
-                    <button
-                      className="text-red-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 ml-4"
-                      onClick={() => handleDelete(trivia.id)}
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {userTrivia !== null &&
+                userTrivia.map((trivia) => (
+                  <tr key={trivia._id}>
+                    <td className="py-2 px-4 border-b border-gray-200 text-2xl">
+                      {trivia.triviaName}
+                    </td>
+                    <td className="py-2 px-4 border-b border-gray-200">
+                      <button
+                        className="bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-900 p-2 rounded-2xl"
+                        onClick={() => handleHost(trivia._id)}
+                      >
+                        <FaPlay className="text-white pl-1" />
+                      </button>
+                      <button className="text-blue-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-4">
+                        <MdEdit />
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 ml-4"
+                        onClick={() => handleDelete(trivia._id)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
