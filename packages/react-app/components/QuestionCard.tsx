@@ -1,17 +1,18 @@
 import React, { useState } from "react";
 import { FaCog, FaCheck } from "react-icons/fa";
+import { TriviaInterface, QuestionInterface } from "@/types/questions";
 
 interface QuestionCardProps {
   id: number;
   onRemove: (id: number) => void;
-  addQuizQuestion: (data: quizQuestionInterface) => void;
+  addQuizQuestion: (data: QuestionInterface) => void;
 }
 
 interface quizQuestionInterface {
   question: string;
   answers: string[];
   image: string | null;
-  correctAnswer: number | null;
+  correctAnswer: string | null;
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -22,7 +23,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   const [image, setImage] = useState<string | ArrayBuffer | null>(null);
   const [question, setQuestion] = useState<string>("");
   const [answers, setAnswers] = useState<string[]>(["", "", "", ""]);
-  const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
+  const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
   const [isTrueFalse, setIsTrueFalse] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [notification, setNotification] = useState<string>("");
@@ -65,11 +66,11 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         "Please fill in all fields and select the correct answer."
       );
     } else {
-      const questionData: quizQuestionInterface = {
+      const questionData: QuestionInterface = {
         question,
-        answers,
-        image: image as string | null,
-        correctAnswer,
+        options: answers,
+        // image: image as string | null,
+        answer: correctAnswer,
       };
       console.log(questionData);
       addQuizQuestion(questionData);
@@ -134,8 +135,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 <input
                   type="radio"
                   name={`correct-answer-${id}`}
-                  checked={correctAnswer === index}
-                  onChange={() => setCorrectAnswer(index)}
+                  checked={correctAnswer === answer}
+                  onChange={() => setCorrectAnswer(answer)}
                   className="mr-2"
                 />
                 <input
@@ -144,7 +145,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                   readOnly
                   className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
                 />
-                {correctAnswer === index && (
+                {correctAnswer === answer && (
                   <FaCheck className="ml-2 text-green-500" />
                 )}
               </div>
@@ -157,8 +158,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 <input
                   type="radio"
                   name={`correct-answer-${id}`}
-                  checked={correctAnswer === index}
-                  onChange={() => setCorrectAnswer(index)}
+                  checked={correctAnswer === answer}
+                  onChange={() => setCorrectAnswer(answer)}
                   className="mr-2"
                 />
                 <input
@@ -168,7 +169,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                   onChange={(e) => handleAnswerChange(index, e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md"
                 />
-                {correctAnswer === index && (
+                {correctAnswer === answer && (
                   <FaCheck className="ml-2 text-green-500" />
                 )}
               </div>

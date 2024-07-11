@@ -3,13 +3,21 @@ import Head from "next/head";
 import QuestionCard from "@/components/QuestionCard";
 import { FaSave, FaTrash } from "react-icons/fa";
 import { useRouter } from "next/router";
+import { createTrivia } from "@/service/services";
+import { TriviaInterface, QuestionInterface } from "@/types/questions";
+import {
+  type BaseError,
+  useAccount,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 
-interface quizQuestionInterface {
-  question: string;
-  answers: string[];
-  image: string | null;
-  correctAnswer: number | null;
-}
+// interface quizQuestionInterface {
+//   question: string;
+//   answers: string[];
+//   image: string | null;
+//   correctAnswer: string | null;
+// }
 
 interface notificationInterfact {
   message: string;
@@ -17,12 +25,11 @@ interface notificationInterfact {
 }
 
 const CreateTrivia: React.FC = () => {
+  const { address, isConnected, chainId } = useAccount();
   const router = useRouter();
   const [triviaName, setTriviaName] = useState<string>("");
   const [questions, setQuestions] = useState<number[]>([0]);
-  const [quizQuestions, setQuizQuestions] = useState<quizQuestionInterface[]>(
-    []
-  );
+  const [quizQuestions, setQuizQuestions] = useState<QuestionInterface[]>([]);
   const [notification, setNotification] =
     useState<notificationInterfact | null>();
   const [loading, setLoading] = useState(false);
@@ -31,7 +38,7 @@ const CreateTrivia: React.FC = () => {
     setQuestions([...questions, questions.length]);
   };
 
-  const addQuizQuestion = (data: quizQuestionInterface) => {
+  const addQuizQuestion = (data: QuestionInterface) => {
     console.log("the data passed is ", data);
     setQuizQuestions((prev) => [...prev, data]);
   };
@@ -49,7 +56,7 @@ const CreateTrivia: React.FC = () => {
     router.push(`/dashboard`);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Save logic goes here
     setLoading(true);
     console.log({ triviaName, quizQuestions });
@@ -61,14 +68,29 @@ const CreateTrivia: React.FC = () => {
       });
       setLoading(false);
     } else {
-      setNotification({
-        message: "Questions are saved!",
-        type: "success",
-      });
-      setLoading(false);
+      const data = {
+        walletAddress: address as string,
+        triviaName: triviaName,
+        questions: quizQuestions,
+      };
+
+      const res = await createTrivia(data);
+      console.log("the res is ", res);
+      if (res.success == true) {
+        setNotification({
+          message: "Questions are saved!",
+          type: "success",
+        });
+        setLoading(false);
+      } else {
+        setNotification({
+          message: "Error happened while saving!",
+          type: "error",
+        });
+        setLoading(false);
+      }
     }
-    // alert("Trivia saved!");
-    // router.push(`/dashboard`);
+
     setTimeout(() => setNotification(null), 3000);
   };
 
