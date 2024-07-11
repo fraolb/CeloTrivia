@@ -22,6 +22,12 @@ import CeloTriviaABI from "../../ContractABI/CeloTriviaABI.json";
 import { config } from "@/config";
 import { createWalletClient, createPublicClient, http } from "viem";
 import { celoAlfajores } from "viem/chains";
+import { cUSDAlfajoresContractABI } from "@/ContractABI/cUSDAlfajoresContract";
+import cUSDTestnetContract from "../../ContractABI/cUSDTestnetContract.json";
+import CeloTriviaV3ABI from "../../ContractABI/CeloTriviaV3ABI.json";
+
+import Web3 from "web3";
+const web3 = new Web3("https://alfajores-forno.celo-testnet.org");
 
 interface Trivia {
   id: number;
@@ -42,7 +48,8 @@ const Dashboard: React.FC = () => {
 
   ///smart contract part
   const [isLoading, setIsLoading] = useState(false);
-  const CeloTriviaTestnet = "0xa889a8012f017Ec7B3DaFb428A0FCf06E6c8e490";
+  const CeloTriviaTestnet: `0x${string}` =
+    "0xa889a8012f017Ec7B3DaFb428A0FCf06E6c8e490";
   const {
     data: hash,
     error,
@@ -55,6 +62,12 @@ const Dashboard: React.FC = () => {
       ? `https://celoscan.io/tx/${hash}`
       : `https://explorer.celo.org/alfajores/tx/${hash}`;
   }, [hash]);
+  const [test, setTest] = useState("");
+
+  const CeloTriviaV3: `0x${string}` =
+    "0x8a4193c90d37367eb99F0E820352671FE46EA9c6";
+  const cUSDAddress: `0x${string}` =
+    "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1";
 
   const handleDelete = (id: number) => {
     setTrivias(trivias.filter((trivia) => trivia.id !== id));
@@ -76,7 +89,7 @@ const Dashboard: React.FC = () => {
     );
 
     if (currentTriviaId !== null && address) {
-      const client = createWalletClient({
+      const privateClient = createWalletClient({
         chain: celoAlfajores,
         transport: custom(window.ethereum!),
       });
@@ -90,81 +103,59 @@ const Dashboard: React.FC = () => {
         const key = Math.floor(Math.random() * 1_000_000_000);
         console.log("the key is ", key);
         setStatus("pending");
+        const _amount = web3.utils.toWei(totalPrizeValue, "ether");
 
-        // const payForTrivia = await client.writeContract({
-        //   account: address,
-        //   address: CeloTriviaTestnet,
-        //   abi: CeloTriviaABI,
-        //   functionName: "deposit",
-        //   args: [key],
-        //   value: parseEther(`${totalPrizeValue}`),
-        // });
-        // const payForTriviaTxnReceipt =
-        //   await publicClient.waitForTransactionReceipt({
-        //     hash: payForTrivia,
-        //   });
+        const approveTxnHash = await privateClient.writeContract({
+          account: address,
+          address: cUSDAddress,
+          abi: cUSDAlfajoresContractABI,
+          functionName: "approve",
+          args: [CeloTriviaV3, _amount],
+        });
 
-        // if (payForTriviaTxnReceipt.status == "success") {
-        //   setIsLoading(false);
-        //   setIsModalOpen(false);
-        //   setStatus("");
-        //   router.push(`/host/${currentTriviaId}`);
-        // } else {
-        //   setStatus(`error ${error}`);
-        //   console.log("Transaction error!");
-        //   console.log(error);
-        // }
+        const approveTxnReceipt = await publicClient.waitForTransactionReceipt({
+          hash: approveTxnHash,
+        });
 
-        setIsLoading(false);
-        setIsModalOpen(false);
-        setStatus("");
-        router.push(`/host/${currentTriviaId}`);
+        if (approveTxnReceipt.status !== "success") {
+          setTest("Approval failed");
+          return false;
+        }
 
-        // writeContract(
-        //   {
-        //     address: CeloTriviaTestnet,
-        //     abi: CeloTriviaABI,
-        //     functionName: "deposit",
-        //     args: [key],
-        //     value: parseEther(`${totalPrizeValue}`),
-        //   },
-        //   {
-        //     onError: (error) => {
-        //       console.log("Transaction error!");
-        //       console.log(error);
-        //     },
-        //     onSuccess: () => {
-        //       setIsLoading(false);
-        //       setIsModalOpen(false);
-        //       setStatus("");
-        //       router.push(`/host/${currentTriviaId}`);
-        //     },
-        //   }
-        // );
+        console.log("Approval successful");
+
+        // Deposit tokens
+        const depositTxnHash = await privateClient.writeContract({
+          account: address,
+          address: CeloTriviaV3,
+          abi: CeloTriviaV3ABI,
+          functionName: "deposit",
+          args: [key, _amount],
+        });
+
+        const depositTxnReceipt = await publicClient.waitForTransactionReceipt({
+          hash: depositTxnHash,
+        });
+
+        if (depositTxnReceipt.status == "success") {
+          console.log("Deposit successful");
+          setIsLoading(false);
+          setIsModalOpen(false);
+          setStatus("");
+          router.push(`/host/${currentTriviaId}`);
+          return true;
+        } else {
+          setStatus(`error ${error}`);
+          console.log("Transaction error!");
+          console.log(error);
+          return false;
+        }
       } catch (error) {
         console.error("Transaction error:", error);
         setIsLoading(false);
       }
     }
   };
-
-  // const { isLoading: isConfirming, isSuccess: isConfirmed } =
-  //   useWaitForTransactionReceipt({
-  //     hash,
-  //   });
-
-  // useEffect(() => {
-  //   if (isConfirming) {
-  //     console.log("Pending transaction...");
-  //   }
-
-  //   if (isConfirmed) {
-  //     console.log("Transaction confirmed:", hash);
-  //     setIsLoading(false);
-  //     setIsModalOpen(false);
-  //     router.push(`/host/${currentTriviaId}`);
-  //   }
-  // }, [isLoading, isConfirmed, hash]);
 
   return (
     <div
