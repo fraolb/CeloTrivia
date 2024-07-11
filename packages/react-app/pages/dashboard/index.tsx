@@ -116,6 +116,7 @@ const Dashboard: React.FC = () => {
         console.log("the key is ", key);
         setStatus("pending");
         const _amount = web3.utils.toWei(totalPrizeValue, "ether");
+        const refLink = currentTriviaId.slice(6);
 
         const approveTxnHash = await privateClient.writeContract({
           account: address,
@@ -153,7 +154,7 @@ const Dashboard: React.FC = () => {
           setIsLoading(false);
           setIsModalOpen(false);
           setStatus("");
-          router.push(`/host/${currentTriviaId}`);
+          router.push(`/host/${refLink}`);
           return true;
         } else {
           setStatus(`error ${error}`);
