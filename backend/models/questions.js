@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const singleQuestionSchema = new mongoose.Schema({
-  questionText: {
+  question: {
     type: String,
     required: [true, "Please provide the question text!"],
   },

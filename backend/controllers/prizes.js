@@ -5,7 +5,7 @@ exports.createPrize = async (req, res) => {
   const { walletAddress, owner, amount, code } = req.body;
 
   try {
-    const newTrivia = await Prize.create({
+    const newTrivia = await Prizes.create({
       walletAddress,
       owner,
       amount,

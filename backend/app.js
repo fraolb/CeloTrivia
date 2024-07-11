@@ -5,9 +5,12 @@ const connectDB = require("./db/connect");
 const bodyParser = require("body-parser");
 const questions = require("./routes/questions");
 const prizes = require("./routes/prizes");
+const cors = require("cors");
 
 const app = express();
 const port = process.env.PORT || 4000;
+
+app.use(cors());
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
