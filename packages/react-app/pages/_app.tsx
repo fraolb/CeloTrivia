@@ -14,6 +14,7 @@ import { celo, celoAlfajores } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import Head from "next/head";
+import { QuestionsProvider } from "@/context/QuestionsContext";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -50,14 +51,17 @@ function App({ Component, pageProps }: AppProps) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
           <ThemeProvider attribute="class">
-            <Layout>
-              <Head>
-                <link rel="icon" href="/CTIcon.png" />
+            <QuestionsProvider>
+              <Layout>
+                <Head>
+                  <link rel="icon" href="/CTIcon.png" />
 
-                <title>CeloTrivia</title>
-              </Head>
-              <Component {...pageProps} />
-            </Layout>
+                  <title>CeloTrivia</title>
+                </Head>
+                <Component {...pageProps} />
+              </Layout>
+            </QuestionsProvider>
+            ,
           </ThemeProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
