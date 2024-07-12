@@ -32,6 +32,7 @@ const web3 = new Web3("https://alfajores-forno.celo-testnet.org");
 import { TriviaInterface, QuestionInterface } from "@/types/questions";
 import { getUserTrivia, createPrize } from "@/service/services";
 import { PrizeInterface } from "@/types/prizes";
+import { useQuestions } from "@/context/QuestionsContext";
 
 interface Trivia {
   _id: number;
@@ -47,6 +48,7 @@ export interface UserTriviaInterface {
 
 const Dashboard: React.FC = () => {
   const { address, isConnected, chainId } = useAccount();
+  const { addQuestion } = useQuestions();
   const [userTrivia, setUserTrivia] = useState<UserTriviaInterface[] | null>(
     null
   );
@@ -58,6 +60,9 @@ const Dashboard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [status, setStatus] = useState("");
   const [currentTriviaId, setCurrentTriviaId] = useState<string | null>(null);
+  const [triviaQuestions, setTriviaQuestions] = useState<
+    QuestionInterface[] | null
+  >([]);
   const router = useRouter();
 
   ///smart contract part
@@ -86,8 +91,10 @@ const Dashboard: React.FC = () => {
     //setTrivias(trivias.filter((trivia) => trivia._id !== id));
   };
 
-  const handleHost = (triviaId: string) => {
+  const handleHost = (triviaId: string, trivia: QuestionInterface[]) => {
     setCurrentTriviaId(triviaId);
+    addQuestion(trivia);
+    setTriviaQuestions(trivia);
     setIsModalOpen(true);
   };
 
@@ -247,7 +254,7 @@ const Dashboard: React.FC = () => {
                     <td className="py-2 px-4 border-b border-gray-200">
                       <button
                         className="bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-900 p-2 rounded-2xl"
-                        onClick={() => handleHost(trivia._id)}
+                        onClick={() => handleHost(trivia._id, trivia.questions)}
                       >
                         <FaPlay className="text-white pl-1" />
                       </button>
@@ -292,7 +299,7 @@ const Dashboard: React.FC = () => {
             </div>
           )} */}
         </div>
-        <div>
+        {/* <div>
           {status == "pending" && (
             <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-65">
               <div className="bg-white p-4 rounded shadow-lg w-1/3 text-black">
@@ -301,9 +308,9 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
 
-        <div className="w-full flex flex-wrap">
+        {/* <div className="w-full flex flex-wrap">
           {hash && (
             <div className="w-full">
               Transaction Hash:{" "}
@@ -317,17 +324,8 @@ const Dashboard: React.FC = () => {
               </a>
             </div>
           )}
-          {/* {isConfirming && (
-            <div className="w-full">Waiting for confirmation...</div>
-          )}
-          {isConfirmed && <div className="w-full">Transaction confirmed.</div>}
-          {error && (
-            <div className="w-80">
-              Error: {(error as BaseError).shortMessage || error.message}
-            </div>
-          )} */}
-          <div>the status is {status}</div>
-        </div>
+
+        </div> */}
       </main>
     </div>
   );
