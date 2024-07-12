@@ -1,6 +1,13 @@
 import io from "socket.io-client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
+import {
+  type BaseError,
+  useAccount,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { createPrize } from "@/service/services";
 
 const socket = io("http://localhost:3001");
 
@@ -9,7 +16,14 @@ interface Question {
   choices: string[];
 }
 
+type CloseQuiz = {
+  key: string;
+  prizes: number[] | string;
+  winners: [string, number][];
+};
+
 function Room() {
+  const { address, isConnected, chainId } = useAccount();
   const router = useRouter();
   const { room } = router.query;
 
@@ -23,6 +37,8 @@ function Room() {
   const [clickable, setClickable] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(0);
   const [winners, setWinners] = useState<[string, number][]>([]);
+
+  const userNameRef = useRef(userName);
 
   const sendMessage = () => {
     socket.emit("send_message", { message, room });
@@ -38,6 +54,59 @@ function Room() {
     socket.emit("add_name", { room, name: userNameForm });
     setUserName(userNameForm);
   };
+
+  // Update the ref whenever userName changes
+  useEffect(() => {
+    userNameRef.current = userName;
+  }, [userName]);
+
+  useEffect(() => {
+    const handleQuizFinished = async (closeQuiz: CloseQuiz) => {
+      setAnswer("");
+      setQuestion(null);
+      console.log("the winner is ", closeQuiz);
+      console.log(`The winners are ${JSON.stringify(closeQuiz)}`);
+
+      const currentUserName = userNameRef.current;
+      console.log("My name is ", currentUserName);
+
+      const winnerIndex = closeQuiz.winners.findIndex(
+        (winner: [string, number]) => winner[0] === currentUserName
+      );
+      console.log("the winner index is ", winnerIndex);
+
+      if (winnerIndex !== -1) {
+        console.log(`Congratulations! You won a prize: ${winnerIndex}`);
+        if (closeQuiz.key !== "Null" && closeQuiz.prizes !== "Null") {
+          const prizeVal = closeQuiz.prizes[winnerIndex];
+          console.log(`Congratulations! You won a prize: ${prizeVal}`);
+          const prize = {
+            walletAddress: address as string,
+            owner: false,
+            amount: prizeVal as number,
+            code: `${closeQuiz.key}`,
+          };
+          try {
+            const res = await createPrize(prize);
+            console.log("Prize creation response:", res);
+          } catch (error) {
+            console.error("Error creating prize:", error);
+          }
+        }
+      } else {
+        console.log("You did not win a prize.");
+      }
+
+      setWinners(closeQuiz.winners);
+    };
+
+    socket.on("quiz_finished", handleQuizFinished);
+
+    // Clean up the socket listener when the component unmounts
+    return () => {
+      socket.off("quiz_finished", handleQuizFinished);
+    };
+  }, []);
 
   useEffect(() => {
     socket.on("receive_message", (data) => {
@@ -61,19 +130,11 @@ function Room() {
       setQuestion(null);
     });
 
-    socket.on("quiz_finished", (winners) => {
-      setAnswer("");
-      setQuestion(null);
-      console.log(`The winners are ${JSON.stringify(winners)}`);
-      setWinners(winners);
-    });
-
     return () => {
       socket.off("receive_message");
       socket.off("receive_question");
       socket.off("receive_answer");
       socket.off("quiz_started");
-      socket.off("quiz_finished");
     };
   }, []);
 

@@ -30,7 +30,8 @@ import Web3 from "web3";
 const web3 = new Web3("https://alfajores-forno.celo-testnet.org");
 
 import { TriviaInterface, QuestionInterface } from "@/types/questions";
-import { getUserTrivia } from "@/service/services";
+import { getUserTrivia, createPrize } from "@/service/services";
+import { PrizeInterface } from "@/types/prizes";
 
 interface Trivia {
   _id: number;
@@ -116,7 +117,9 @@ const Dashboard: React.FC = () => {
         console.log("the key is ", key);
         setStatus("pending");
         const _amount = web3.utils.toWei(totalPrizeValue, "ether");
-        const refLink = currentTriviaId.slice(6);
+        const refLink = currentTriviaId.slice(0, 6);
+        console.log("the triviaId is ", currentTriviaId);
+        console.log("the refLink is ", refLink);
 
         const approveTxnHash = await privateClient.writeContract({
           account: address,
@@ -150,12 +153,32 @@ const Dashboard: React.FC = () => {
         });
 
         if (depositTxnReceipt.status == "success") {
-          console.log("Deposit successful");
-          setIsLoading(false);
-          setIsModalOpen(false);
-          setStatus("");
-          router.push(`/host/${refLink}`);
-          return true;
+          const prize = {
+            walletAddress: address,
+            owner: true,
+            amount: totalPrizeValue,
+            code: `${key}`,
+          };
+          const res = await createPrize(prize);
+          console.log("the res is : ", res);
+          if (res.success == true) {
+            const data = res.data;
+            console.log("Deposit successful");
+            setIsLoading(false);
+            setIsModalOpen(false);
+            setStatus("");
+            router.push({
+              pathname: `/host/${refLink}`,
+              query: {
+                id: data._id,
+                prizeValue: totalPrizeValue,
+                prizes,
+                numberOfPrizes,
+                key,
+              },
+            });
+            return true;
+          }
         } else {
           setStatus(`error ${error}`);
           console.log("Transaction error!");

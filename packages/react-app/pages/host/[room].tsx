@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import io from "socket.io-client";
-import { isNull } from "util";
+import { deletePrize } from "@/service/services";
 
 interface Question {
   text: string;
@@ -21,7 +21,7 @@ const socket = io("http://localhost:3001", {
 
 const HostPage = () => {
   const router = useRouter();
-  const { room } = router.query;
+  const { room, id, prizeValue, prizes, numberOfPrizes, key } = router.query;
 
   const [message, setMessage] = useState<string>("");
   const [messageReceived, setMessageReceived] = useState<string>("");
@@ -102,7 +102,7 @@ const HostPage = () => {
     startQuestionTimer(qIndex);
   };
 
-  const finishQuestion = () => {
+  const finishQuestion = async () => {
     // Convert totalUserAnswers object to an array of [user, points] pairs
     const userPointsArray = Object.entries(totalUserAnswers);
 
@@ -110,12 +110,24 @@ const HostPage = () => {
     userPointsArray.sort((a, b) => b[1] - a[1]);
 
     // Get the top 3 scorers
-    const winners = userPointsArray.slice(0, 3);
-    console.log("the winners are ", winners);
-    setWinners(winners);
+    const num = Number(numberOfPrizes);
+    if (key !== undefined && prizes !== undefined && id !== undefined) {
+      const winners = userPointsArray.slice(0, num);
+      const res = await deletePrize(id as string);
+      console.log("the delete res is ", res);
+      console.log("the winners are ", winners, key, prizes);
+      setWinners(winners);
 
-    // Emit the quiz_finished event with the top scorers
-    socket.emit("close_quiz", { room, winners });
+      // Emit the quiz_finished event with the top scorers
+      socket.emit("close_quiz", { room, winners, key, prizes });
+    } else {
+      const winners = userPointsArray.slice(0, 3);
+      console.log("the winners are ", winners, key, prizes);
+      setWinners(winners);
+
+      // Emit the quiz_finished event with the top scorers
+      socket.emit("close_quiz", { room, winners, key: "Null", prizes: "Null" });
+    }
   };
 
   useEffect(() => {
@@ -167,6 +179,12 @@ const HostPage = () => {
       socket.off("user_joined");
     };
   }, [room, questionIndex]);
+
+  console.log("the id is ", id);
+  console.log("the prizeValue is ", prizeValue);
+  console.log("the prizes is ", prizes);
+  console.log("the prizes length is is ", prizes?.length);
+  console.log("the key is ", key);
 
   return (
     <div
