@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import io from "socket.io-client";
 import { deletePrize } from "@/service/services";
+import Link from "next/link";
+import { useQuestions } from "@/context/QuestionsContext";
 
 interface Question {
   text: string;
@@ -22,29 +24,30 @@ const socket = io("http://localhost:3001", {
 const HostPage = () => {
   const router = useRouter();
   const { room, id, prizeValue, prizes, numberOfPrizes, key } = router.query;
+  const { questions } = useQuestions();
 
   const [message, setMessage] = useState<string>("");
   const [messageReceived, setMessageReceived] = useState<string>("");
   const [quizStarted, setQuizStarted] = useState<boolean>(false);
   const [questionIndex, setQuestionIndex] = useState<number>(0);
-  const [questions, setQuestions] = useState<Question[]>([
-    {
-      text: "What is the capital of France?",
-      choices: ["Paris", "Berlin", "Madrid", "Rome"],
-      answer: "Paris",
-    },
-    {
-      text: "What is 2 + 2?",
-      choices: ["3", "4", "5", "6"],
-      answer: "4",
-    },
-    {
-      text: "2 + 2 is 4",
-      choices: ["True", "False"],
-      answer: "True",
-    },
-    // Add more questions as needed
-  ]);
+  // const [questions, setQuestions] = useState<Question[]>([
+  //   {
+  //     text: "What is the capital of France?",
+  //     choices: ["Paris", "Berlin", "Madrid", "Rome"],
+  //     answer: "Paris",
+  //   },
+  //   {
+  //     text: "What is 2 + 2?",
+  //     choices: ["3", "4", "5", "6"],
+  //     answer: "4",
+  //   },
+  //   {
+  //     text: "2 + 2 is 4",
+  //     choices: ["True", "False"],
+  //     answer: "True",
+  //   },
+  //   // Add more questions as needed
+  // ]);
   const [showAnswer, setShowAnswer] = useState<boolean>(false);
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
   const [totalUserAnswers, setTotalUserAnswers] = useState<{
@@ -120,6 +123,8 @@ const HostPage = () => {
 
       // Emit the quiz_finished event with the top scorers
       socket.emit("close_quiz", { room, winners, key, prizes });
+      setTotalUserAnswers({});
+      setShowAnswer(false);
     } else {
       const winners = userPointsArray.slice(0, 3);
       console.log("the winners are ", winners, key, prizes);
@@ -218,11 +223,11 @@ const HostPage = () => {
                 {!showAnswer && (
                   <div>
                     <h2 className="w-full p-2 mb-4 border border-gray-300 rounded-md text-center text-2xl">
-                      {questions[questionIndex].text}
+                      {questions[questionIndex].question}
                     </h2>
                     <ul>
                       <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-4">
-                        {questions[questionIndex].choices.map(
+                        {questions[questionIndex].options.map(
                           (choice, index) => (
                             <div
                               key={index}
@@ -247,7 +252,7 @@ const HostPage = () => {
                     Answer: {questions[questionIndex].answer}
                   </h3>
                   <h3 className="text-xl mt-4">
-                    Users who answered correctly:
+                    Users who answered this question correctly:
                   </h3>
                   <ul>
                     {userAnswers.length > 0 ? (
@@ -316,25 +321,60 @@ const HostPage = () => {
           ))}
         </ul>
       </div>
-      <div className="flex justify-center space-x-8">
-        {winners.slice(1, 3).map(([userId, points], index) => (
-          <div
-            key={index}
-            className={`flex flex-col p-2 items-center border border-green-500 rounded-2xl`}
-          >
+      <div className="mt-8">
+        {winners.length > 0 && (
+          <h3 className="text-4xl text-center mb-8">Trivia Winners</h3>
+        )}
+        <div className="flex justify-center space-x-8">
+          {winners.slice(0, 1).map(([userId, points], index) => (
             <div
-              className={`p-4 rounded-full font-bold flex items-center justify-center text-4xl`}
+              key={index}
+              className={`flex flex-col p-2 items-center border border-green-500 rounded-2xl`}
             >
-              {index + 2}
+              <div
+                className={`p-4 rounded-full font-bold flex items-center justify-center text-4xl`}
+              >
+                {index + 1}
+              </div>
+              <div className=" text-lg text-center">
+                {/* {userId.slice(0, 4)}...{userId.slice(-4)} */}
+                {userId}
+                <br />
+                {points} points
+              </div>
             </div>
-            <div className="text-lg text-center">
-              {/* {userId.slice(0, 4)}...{userId.slice(-4)} */}
-              {userId}
-              <br />
-              {points} points
+          ))}
+        </div>
+        <div className="flex justify-center space-x-8">
+          {winners.slice(1, 3).map(([userId, points], index) => (
+            <div
+              key={index}
+              className={`flex flex-col p-2 items-center border border-green-500 rounded-2xl`}
+            >
+              <div
+                className={`p-4 rounded-full font-bold flex items-center justify-center text-4xl`}
+              >
+                {index + 2}
+              </div>
+              <div className="text-lg text-center">
+                {/* {userId.slice(0, 4)}...{userId.slice(-4)} */}
+                {userId}
+                <br />
+                {points} points
+              </div>
             </div>
+          ))}
+        </div>
+        {winners.length > 0 && (
+          <div className="flex justify-center">
+            <Link
+              className="bg-green-500 text-white p-2 mt-4 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+              href={"/dashboard"}
+            >
+              Go to dashboard
+            </Link>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
