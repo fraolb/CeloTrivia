@@ -124,8 +124,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("close_quiz", (data) => {
-    const { room, winners } = data;
-    socket.to(room).emit("quiz_finished", winners);
+    const { room, winners, key, prizes } = data;
+    const closeQuiz = { winners: winners, key: key, prizes: prizes };
+    console.log("the close quiz data is ", closeQuiz);
+    socket.to(room).emit("quiz_finished", closeQuiz);
   });
 });
 
