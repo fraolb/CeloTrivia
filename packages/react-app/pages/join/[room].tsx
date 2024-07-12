@@ -8,12 +8,13 @@ import {
   useWriteContract,
 } from "wagmi";
 import { createPrize } from "@/service/services";
+import Link from "next/link";
 
 const socket = io("http://localhost:3001");
 
 interface Question {
-  text: string;
-  choices: string[];
+  question: string;
+  options: string[];
 }
 
 type CloseQuiz = {
@@ -37,6 +38,7 @@ function Room() {
   const [clickable, setClickable] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(0);
   const [winners, setWinners] = useState<[string, number][]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const userNameRef = useRef(userName);
 
@@ -78,7 +80,10 @@ function Room() {
       if (winnerIndex !== -1) {
         console.log(`Congratulations! You won a prize: ${winnerIndex}`);
         if (closeQuiz.key !== "Null" && closeQuiz.prizes !== "Null") {
-          const prizeVal = closeQuiz.prizes[winnerIndex];
+          const prizeVal =
+            closeQuiz.winners.length == 1
+              ? closeQuiz.prizes
+              : closeQuiz.prizes[winnerIndex];
           console.log(`Congratulations! You won a prize: ${prizeVal}`);
           const prize = {
             walletAddress: address as string,
@@ -89,6 +94,9 @@ function Room() {
           try {
             const res = await createPrize(prize);
             console.log("Prize creation response:", res);
+            if (res.success == true) {
+              setIsModalOpen(true);
+            }
           } catch (error) {
             console.error("Error creating prize:", error);
           }
@@ -231,11 +239,11 @@ function Room() {
             {question && (
               <div>
                 <h2 className="w-full p-2 mb-4 border border-gray-300 rounded-md text-center text-2xl">
-                  {question.text}
+                  {question.question}
                 </h2>
                 <ul>
                   <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-4">
-                    {question.choices.map((choice, index) => (
+                    {question.options.map((choice, index) => (
                       <button
                         key={index}
                         disabled={!clickable}
@@ -317,9 +325,44 @@ function Room() {
                 </div>
               ))}
             </div>
+            {winners.length > 0 && (
+              <div className="flex justify-center">
+                <Link
+                  className="bg-green-500 text-white p-2 mt-4 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                  href={"/"}
+                >
+                  Go to Home
+                </Link>
+              </div>
+            )}
           </div>
           <div className="fixed bottom-8 left-8 bg-blue-500 text-white rounded-lg text-2xl text-center p-1 px-2">
             {userName}
+          </div>
+          <div>
+            {isModalOpen ? (
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+                <div className="bg-white p-4 rounded shadow-lg md:w-3/5 text-black">
+                  <div className="text-green-500 text-lg text-center">
+                    Congratulations you have won the trivia
+                  </div>
+                  <div className="flex justify-between px-4">
+                    <Link
+                      className="bg-green-500 text-white p-2 mt-4 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                      href={"/claimPrize"}
+                    >
+                      Claim Now
+                    </Link>
+                    <Link
+                      className="bg-red-500 text-white p-2 mt-4 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                      href={"/"}
+                    >
+                      Claim Later
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : (
