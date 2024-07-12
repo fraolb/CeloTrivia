@@ -78,7 +78,7 @@ export default function Home() {
             <h1 className="text-3xl font-bold mt-24 mb-12 ">
               Welcome to Celo Trivia
             </h1>
-            <Link href={"/Tokens"}>check balance</Link>
+            {/* <Link href={"/Tokens"}>check balance</Link> */}
 
             <div className="w-full max-w-md p-8 mt-20 rounded-lg shadow-md border border-solid bg-white bg-opacity-50">
               <input
@@ -102,6 +102,12 @@ export default function Home() {
               className="fixed bottom-10 p-3 px-6 text-lg font-semibold text-white bg-green-500 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               Create Trivia
+            </Link>
+            <Link
+              href={"/claimPrize"}
+              className="bottom-10 p-3 px-6 text-md underline underline-offset-auto font-semibold text-white  rounded-md "
+            >
+              Claim previous prize
             </Link>
           </main>
         </div>
