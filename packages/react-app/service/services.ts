@@ -2,7 +2,9 @@ import axios from "axios";
 import { TriviaInterface } from "@/types/questions";
 import { PrizeInterface } from "@/types/prizes";
 
-const BASE_URL = `${process.env.DATABASE_URL || "http://localhost:5000"}`;
+const BASE_URL = `${
+  process.env.NEXT_PUBLIC_DATABASE_URL || "http://localhost:5000"
+}`;
 
 const api_v1 = axios.create({
   baseURL: BASE_URL,
