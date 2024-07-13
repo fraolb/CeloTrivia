@@ -24,9 +24,11 @@ export default function Home() {
       T: () => {},
     };
   }
-
+  console.log(`the server api is ${process.env.NEXT_PUBLIC_SERVER_API}`);
   const handleJoin = () => {
-    const socket = io("http://localhost:3001");
+    const socket = io(
+      `${process.env.NEXT_PUBLIC_SERVER_API || "http://localhost:3001"}`
+    );
 
     socket.emit("check_room", room);
 
