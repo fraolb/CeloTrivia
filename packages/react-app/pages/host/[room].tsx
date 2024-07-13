@@ -17,6 +17,11 @@ interface UserAnswer {
   point: number;
 }
 
+interface notificationInterfact {
+  message: string;
+  type: string;
+}
+
 const socket = io(
   `${process.env.NEXT_PUBLIC_SERVER_API || "http://localhost:3001"}`,
   {
@@ -59,6 +64,10 @@ const HostPage = () => {
   const [playerNames, setPlayerNames] = useState([]);
   const [countdown, setCountdown] = useState<number>(0);
   const [winners, setWinners] = useState<[string, number][]>([]);
+
+  const [notification, setNotification] =
+    useState<notificationInterfact | null>();
+  const [loading, setLoading] = useState(false);
 
   const sendMessage = () => {
     socket.emit("send_message", { message, room });
@@ -117,24 +126,49 @@ const HostPage = () => {
 
     // Get the top 3 scorers
     const num = Number(numberOfPrizes);
-    if (key !== undefined && prizes !== undefined && id !== undefined) {
-      const winners = userPointsArray.slice(0, num);
-      const res = await deletePrize(id as string);
-      console.log("the delete res is ", res);
-      console.log("the winners are ", winners, key, prizes);
-      setWinners(winners);
+    setLoading(true);
+    try {
+      if (key !== undefined && prizes !== undefined && id !== undefined) {
+        const winners = userPointsArray.slice(0, num);
+        const res = await deletePrize(id as string);
+        console.log("the delete res is ", res);
+        console.log("the winners are ", winners, key, prizes);
+        setWinners(winners);
 
-      // Emit the quiz_finished event with the top scorers
-      socket.emit("close_quiz", { room, winners, key, prizes });
-      setTotalUserAnswers({});
-      setShowAnswer(false);
-    } else {
-      const winners = userPointsArray.slice(0, 3);
-      console.log("the winners are ", winners, key, prizes);
-      setWinners(winners);
+        // Emit the quiz_finished event with the top scorers
+        socket.emit("close_quiz", { room, winners, key, prizes });
+        setTotalUserAnswers({});
+        setShowAnswer(false);
+        setNotification({
+          message: "Trivia closed!",
+          type: "success",
+        });
+        setLoading(false);
+      } else {
+        const winners = userPointsArray.slice(0, 3);
+        console.log("the winners are ", winners, key, prizes);
+        setWinners(winners);
 
-      // Emit the quiz_finished event with the top scorers
-      socket.emit("close_quiz", { room, winners, key: "Null", prizes: "Null" });
+        // Emit the quiz_finished event with the top scorers
+        socket.emit("close_quiz", {
+          room,
+          winners,
+          key: "Null",
+          prizes: "Null",
+        });
+        setNotification({
+          message: "trivia closed!",
+          type: "success",
+        });
+        setLoading(false);
+      }
+    } catch (error) {
+      console.log("error happened finishing quiz", error);
+      setNotification({
+        message: "Error happened while closing!",
+        type: "error",
+      });
+      setLoading(false);
     }
   };
 
@@ -199,6 +233,15 @@ const HostPage = () => {
       className="flex flex-col items-center min-h-screen py-2 bg-cover bg-center text-white"
       style={{ backgroundImage: "url('/4.png')" }}
     >
+      {notification && (
+        <div
+          className={`fixed top-0 left-1/2 transform -translate-x-1/2 mt-12 p-2 px-4 w-3/4 rounded shadow-lg z-10 ${
+            notification.type === "success" ? "bg-green-500" : "bg-red-500"
+          } text-white`}
+        >
+          {notification.message}
+        </div>
+      )}
       <h1 className="text-4xl font-bold mt-8 mb-12">Host Page</h1>
       <p className="text-2xl mb-1">Trivia ID: {room}</p>
       <button
@@ -217,9 +260,9 @@ const HostPage = () => {
         </button>
       ) : (
         <div>
-          {countdown > 0 && (
+          {/* {countdown > 0 && (
             <h2 className="text-2xl mt-4">Starting in: {countdown}</h2>
-          )}
+          )} */}
           {quizStarted && (
             <div>
               <div>
@@ -250,12 +293,12 @@ const HostPage = () => {
               )}
 
               {showAnswer && (
-                <div className="mt-4">
+                <div className="mt-4 mx-2 px-2">
                   <h3 className="text-xl text-center">
                     Answer: {questions[questionIndex].answer}
                   </h3>
                   <h3 className="text-xl mt-4">
-                    Users who answered this question correctly:
+                    Players who answered this question correctly:
                   </h3>
                   <ul>
                     {userAnswers.length > 0 ? (
@@ -285,7 +328,33 @@ const HostPage = () => {
                         onClick={finishQuestion}
                         className="px-4 py-2 bg-blue-500 text-white text-center rounded-md hover:bg-blue-600 mt-4"
                       >
-                        Finish Quiz
+                        {loading ? (
+                          <div className="flex items-center justify-center">
+                            <svg
+                              className="animate-spin h-5 w-5 mr-3 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Closing...
+                          </div>
+                        ) : (
+                          "Finish Quiz"
+                        )}
                       </button>
                     </div>
                   )}
