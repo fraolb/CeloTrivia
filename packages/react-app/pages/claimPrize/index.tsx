@@ -207,7 +207,9 @@ const ClaimPrize: React.FC = () => {
             </div>
           ))}
       </div>
-      <div>The error is {errMsg}</div>
+      <div className="w-screen border border-red-500">
+        The error is {errMsg}
+      </div>
       <div className="container mx-auto p-4">
         {userPrizes == null ||
         userPrizes == undefined ||
