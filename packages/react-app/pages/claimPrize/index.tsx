@@ -30,7 +30,7 @@ interface notificationInterfact {
   type: string;
 }
 
-const index = () => {
+const index: React.FC = () => {
   const { address, isConnected, chainId } = useAccount();
   const [userPrizes, setUserPrizes] = useState<PrizeInterface[] | null>();
 
