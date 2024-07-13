@@ -38,6 +38,7 @@ const ClaimPrize: React.FC = () => {
   const [notification, setNotification] =
     useState<notificationInterfact | null>();
   const [id, setId] = useState<Number | null>();
+  const [errMsg, setErrMsg] = useState("");
 
   const CeloTriviaV3: `0x${string}` =
     "0x8a4193c90d37367eb99F0E820352671FE46EA9c6";
@@ -71,9 +72,9 @@ const ClaimPrize: React.FC = () => {
           hash: approveTxnHash,
         });
 
-        // if (approveTxnReceipt.status !== "success") {
-        //   return false;
-        // }
+        if (approveTxnReceipt.status !== "success") {
+          return false;
+        }
 
         console.log("Approval successful");
 
@@ -116,6 +117,7 @@ const ClaimPrize: React.FC = () => {
         console.error("Transaction error:", error);
         setLoading(false);
         setId(null);
+        setErrMsg(`${error}`);
         setNotification({
           message: "Error happened while claiming!",
           type: "error",
@@ -205,6 +207,7 @@ const ClaimPrize: React.FC = () => {
             </div>
           ))}
       </div>
+      <div>The error is {errMsg}</div>
       <div className="container mx-auto p-4">
         {userPrizes == null ||
         userPrizes == undefined ||
