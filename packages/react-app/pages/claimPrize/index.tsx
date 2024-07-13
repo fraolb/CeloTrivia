@@ -30,7 +30,7 @@ interface notificationInterfact {
   type: string;
 }
 
-const index: React.FC = () => {
+const ClaimPrize: React.FC = () => {
   const { address, isConnected, chainId } = useAccount();
   const [userPrizes, setUserPrizes] = useState<PrizeInterface[] | null>();
 
@@ -218,4 +218,4 @@ const index: React.FC = () => {
   );
 };
 
-export default index;
+export default ClaimPrize;
