@@ -37,13 +37,14 @@ const ClaimPrize: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] =
     useState<notificationInterfact | null>();
+  const [id, setId] = useState<Number | null>();
 
   const CeloTriviaV3: `0x${string}` =
     "0x8a4193c90d37367eb99F0E820352671FE46EA9c6";
   const cUSDAddress: `0x${string}` =
     "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1";
 
-  const handleClaim = async (prize: PrizeInterface) => {
+  const handleClaim = async (prize: PrizeInterface, index: number) => {
     const privateClient = createWalletClient({
       chain: celoAlfajores,
       transport: custom(window.ethereum!),
@@ -56,6 +57,7 @@ const ClaimPrize: React.FC = () => {
     if (address) {
       try {
         setLoading(true);
+        setId(index);
         const _amount = web3.utils.toWei(prize.amount, "ether");
         const approveTxnHash = await privateClient.writeContract({
           account: address,
@@ -69,9 +71,9 @@ const ClaimPrize: React.FC = () => {
           hash: approveTxnHash,
         });
 
-        if (approveTxnReceipt.status !== "success") {
-          return false;
-        }
+        // if (approveTxnReceipt.status !== "success") {
+        //   return false;
+        // }
 
         console.log("Approval successful");
 
@@ -94,6 +96,7 @@ const ClaimPrize: React.FC = () => {
           console.log("the res for delete prize after claim is ", res);
           fetchData();
           setLoading(false);
+          setId(null);
           setNotification({
             message: "Trivia Prize redeem successfully!",
             type: "success",
@@ -102,8 +105,9 @@ const ClaimPrize: React.FC = () => {
         } else {
           console.log("Transaction error!");
           setLoading(false);
+          setId(null);
           setNotification({
-            message: "Error happened while claiming!",
+            message: "error happened while claiming!",
             type: "error",
           });
           return false;
@@ -111,11 +115,13 @@ const ClaimPrize: React.FC = () => {
       } catch (error) {
         console.error("Transaction error:", error);
         setLoading(false);
+        setId(null);
         setNotification({
           message: "Error happened while claiming!",
           type: "error",
         });
       }
+      setTimeout(() => setNotification(null), 3000);
     }
   };
   const fetchData = async () => {
@@ -162,11 +168,11 @@ const ClaimPrize: React.FC = () => {
                 </div>
                 <div className="text-center sm:text-right">
                   <button
-                    onClick={() => handleClaim(prize)}
+                    onClick={() => handleClaim(prize, index)}
                     disabled={loading}
                     className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                   >
-                    {loading ? (
+                    {loading && id == index ? (
                       <div className="flex items-center justify-center">
                         <svg
                           className="animate-spin h-5 w-5 mr-3 text-white"
