@@ -10,7 +10,12 @@ const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 4000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://celo-trivia.vercel.app/",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
