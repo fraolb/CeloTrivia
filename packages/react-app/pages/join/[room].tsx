@@ -10,7 +10,9 @@ import {
 import { createPrize } from "@/service/services";
 import Link from "next/link";
 
-const socket = io("http://localhost:3001");
+const socket = io(
+  `${process.env.NEXT_PUBLIC_SERVER_API || "http://localhost:3001"}`
+);
 
 interface Question {
   question: string;
@@ -289,14 +291,14 @@ function Room() {
               {winners.slice(0, 1).map(([userId, points], index) => (
                 <div
                   key={index}
-                  className={`flex flex-col p-2 items-center border border-green-500 rounded-2xl`}
+                  className={`flex flex-col w-1/2 h-1/2 p-2 items-center bg-blue-500 border border-green-500 rounded-full relative`}
                 >
                   <div
-                    className={`p-4 rounded-full font-bold flex items-center justify-center text-4xl`}
+                    className={`font-bold flex items-center justify-center text-4xl absolute bottom-16`}
                   >
                     {index + 1}
                   </div>
-                  <div className=" text-lg text-center">
+                  <div className="p-2 text-lg text-center">
                     {/* {userId.slice(0, 4)}...{userId.slice(-4)} */}
                     {userId}
                     <br />
@@ -309,14 +311,14 @@ function Room() {
               {winners.slice(1, 3).map(([userId, points], index) => (
                 <div
                   key={index}
-                  className={`flex flex-col p-2 items-center border border-green-500 rounded-2xl`}
+                  className={`flex flex-col w-1/2 h-1/2 p-2 items-center bg-blue-500 border border-green-500 rounded-full relative`}
                 >
                   <div
-                    className={`p-4 rounded-full font-bold flex items-center justify-center text-4xl`}
+                    className={`font-bold flex items-center justify-center text-4xl absolute bottom-16`}
                   >
                     {index + 2}
                   </div>
-                  <div className="text-lg text-center">
+                  <div className="p-2 text-lg text-center">
                     {/* {userId.slice(0, 4)}...{userId.slice(-4)} */}
                     {userId}
                     <br />
