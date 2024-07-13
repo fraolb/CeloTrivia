@@ -60,21 +60,21 @@ const ClaimPrize: React.FC = () => {
         setLoading(true);
         setId(index);
         const _amount = web3.utils.toWei(prize.amount, "ether");
-        const approveTxnHash = await privateClient.writeContract({
-          account: address,
-          address: cUSDAddress,
-          abi: cUSDAlfajoresContractABI,
-          functionName: "approve",
-          args: [CeloTriviaV3, _amount],
-        });
+        // const approveTxnHash = await privateClient.writeContract({
+        //   account: address,
+        //   address: cUSDAddress,
+        //   abi: cUSDAlfajoresContractABI,
+        //   functionName: "approve",
+        //   args: [CeloTriviaV3, _amount],
+        // });
 
-        const approveTxnReceipt = await publicClient.waitForTransactionReceipt({
-          hash: approveTxnHash,
-        });
+        // const approveTxnReceipt = await publicClient.waitForTransactionReceipt({
+        //   hash: approveTxnHash,
+        // });
 
-        if (approveTxnReceipt.status !== "success") {
-          return false;
-        }
+        // if (approveTxnReceipt.status !== "success") {
+        //   return false;
+        // }
 
         console.log("Approval successful");
 
