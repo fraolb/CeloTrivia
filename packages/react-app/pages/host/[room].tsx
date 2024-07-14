@@ -170,6 +170,7 @@ const HostPage = () => {
       });
       setLoading(false);
     }
+    setTimeout(() => setNotification(null), 3000);
   };
 
   useEffect(() => {
