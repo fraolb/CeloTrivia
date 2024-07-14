@@ -12,7 +12,6 @@ const port = process.env.PORT || 4000;
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://celo-trivia.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
