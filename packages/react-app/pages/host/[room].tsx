@@ -130,8 +130,8 @@ const HostPage = () => {
     try {
       if (key !== undefined && prizes !== undefined && id !== undefined) {
         const winners = userPointsArray.slice(0, num);
-        const res = await deletePrize(id as string);
-        console.log("the delete res is ", res);
+        // const res = await deletePrize(id as string);
+        // console.log("the delete res is ", res);
         console.log("the winners are ", winners, key, prizes);
         setWinners(winners);
 
