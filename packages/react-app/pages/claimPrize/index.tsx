@@ -106,7 +106,8 @@ const ClaimPrize: React.FC = () => {
             message: "Trivia Prize redeem successfully!",
             type: "success",
           });
-          router.push("/");
+          setTimeout(() => router.push("/"), 3000);
+
           return true;
         } else {
           console.log("Transaction error!");
