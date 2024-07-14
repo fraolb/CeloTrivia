@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { FaTrash, FaPlus, FaPlay } from "react-icons/fa";
+import { IoReturnUpBack } from "react-icons/io5";
 import { MdEdit } from "react-icons/md";
 import { useRouter } from "next/router";
 import PrizeModal from "@/components/PrizeModal";
@@ -225,7 +226,13 @@ const Dashboard: React.FC = () => {
       <main className="flex flex-col items-center w-full flex-1 px-4 sm:px-20 text-center text-white">
         <h1 className="text-4xl font-bold mt-20 mb-12">Dashboard</h1>
 
-        <div className="flex justify-end w-full">
+        <div className="flex justify-between w-full">
+          <Link
+            href="/"
+            className="flex items-center justify-center px-4 py-2 mb-6 text-lg font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <IoReturnUpBack className="mr-2" />
+          </Link>
           <Link
             href="/create"
             className="flex items-center justify-center px-4 py-2 mb-6 text-lg font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
