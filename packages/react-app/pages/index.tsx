@@ -100,16 +100,16 @@ export default function Home() {
             </div>
 
             <Link
-              href={"/dashboard"}
-              className="fixed bottom-10 p-3 px-6 text-lg font-semibold text-white bg-green-500 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Create Trivia
-            </Link>
-            <Link
               href={"/claimPrize"}
               className="bottom-10 p-3 px-6 text-md underline underline-offset-auto font-semibold text-white  rounded-md "
             >
               Claim previous prize
+            </Link>
+            <Link
+              href={"/dashboard"}
+              className="bottom-10 p-3 mt-12 px-6 text-lg font-semibold text-white bg-green-500 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              Create Trivia
             </Link>
           </main>
         </div>
