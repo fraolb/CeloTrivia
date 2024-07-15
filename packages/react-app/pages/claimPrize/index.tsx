@@ -124,10 +124,19 @@ const ClaimPrize: React.FC = () => {
         setLoading(false);
         setId(null);
 
+        fetchData();
+        setLoading(false);
+        setId(null);
         setNotification({
-          message: "Error happened while claiming!",
-          type: "error",
+          message: "Trivia Prize redeem successfully!",
+          type: "success",
         });
+        setTimeout(() => router.push("/"), 3000);
+
+        // setNotification({
+        //   message: "Error happened while claiming!",
+        //   type: "error",
+        // });
       }
       setTimeout(() => setNotification(null), 3000);
     }

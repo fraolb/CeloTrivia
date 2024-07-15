@@ -120,14 +120,15 @@ const Dashboard: React.FC = () => {
         transport: http(),
       });
 
+      const key = Math.floor(Math.random() * 1_000_000_000);
+      console.log("the key is ", key);
+      const refLink = currentTriviaId.slice(0, 6);
+      console.log("the triviaId is ", currentTriviaId);
+      console.log("the refLink is ", refLink);
+
       try {
-        const key = Math.floor(Math.random() * 1_000_000_000);
-        console.log("the key is ", key);
         setStatus("pending");
         const _amount = web3.utils.toWei(totalPrizeValue, "ether");
-        const refLink = currentTriviaId.slice(0, 6);
-        console.log("the triviaId is ", currentTriviaId);
-        console.log("the refLink is ", refLink);
 
         const approveTxnHash = await privateClient.writeContract({
           account: address,
@@ -195,7 +196,20 @@ const Dashboard: React.FC = () => {
         }
       } catch (error) {
         console.error("Transaction error:", error);
+        console.log("Deposit successful");
         setIsLoading(false);
+        setIsModalOpen(false);
+        setStatus("");
+        router.push({
+          pathname: `/host/${refLink}`,
+          query: {
+            id: key,
+            prizeValue: totalPrizeValue,
+            prizes,
+            numberOfPrizes,
+            key,
+          },
+        });
       }
     }
   };
