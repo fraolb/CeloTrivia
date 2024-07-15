@@ -10,11 +10,7 @@ const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 4000;
 
-app.use(
-  cors({
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
-);
+app.use(cors());
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
